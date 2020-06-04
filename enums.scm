@@ -77,7 +77,7 @@
 (define (%enum-map-type-data->list proc type)
   (assume (enum-type? type))
   (vector-fold-right
-   (lambda (_ lis enum) (cons (proc enum) lis))
+   (lambda (lis enum) (cons (proc enum) lis))
    '()
    (enum-type-data type)))
 
