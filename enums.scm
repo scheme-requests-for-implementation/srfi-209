@@ -130,3 +130,15 @@
 
 (define (enum-type-values type)
   (map enum-value (enum-type-enums type)))
+
+;;;; Enum object procedures
+
+(define (enum-next enum)
+  (assume (enum? enum))
+  (enum-ordinal->enum (enum-type enum) (+ (enum-ordinal enum) 1)))
+
+(define (enum-prev enum)
+  (assume (enum? enum))
+  (let ((ord (enum-ordinal enum)))
+    (and (> ord 0)
+         (enum-ordinal->enum (enum-type enum) (- ord 1)))))

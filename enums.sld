@@ -16,6 +16,9 @@
           enum-name->value enum-ordinal->name enum-ordinal->value
 
           enum-type-size enum-min enum-max enum-type-enums
-          enum-type-names enum-type-values)
+          enum-type-names enum-type-values
+
+          enum-next enum-prev
+          )
 
   (include "enums.scm"))
