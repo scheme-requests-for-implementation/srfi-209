@@ -19,6 +19,8 @@
           enum-type-names enum-type-values
 
           enum-next enum-prev
+
+          make-enum-comparator
           )
 
   (include "enums.scm"))
