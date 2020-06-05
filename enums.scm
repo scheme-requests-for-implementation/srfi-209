@@ -6,9 +6,10 @@
 ;;;; Types
 
 (define-record-type <enum-type>
-  (make-raw-enum-type enums)
+  (make-raw-enum-type enums comparator)
   enum-type?
-  (enums enum-type-enums set-enum-type-enums!))
+  (enums enum-type-enums set-enum-type-enums!)
+  (comparator enum-type-comparator set-enum-type-comparator!))
 
 (define-record-type <enum>
   (make-enum type name ordinal value)
@@ -22,13 +23,53 @@
 ;; in a flat list.  TODO: Find a better representation and support
 ;; values.
 (define (make-enum-type names)
-  (let ((type (make-raw-enum-type #f)))
+  (let ((type (make-raw-enum-type #f #f)))
     (set-enum-type-enums! type
                           (map (lambda (name ord)
                                  (make-enum type name ord #f))
                                names
                                (iota (length names))))
+    (set-enum-type-comparator! type (make-enum-comparator type))
     type))
+
+(define (make-enum-comparator type)
+  (make-comparator
+   (lambda (obj)
+     (and (enum? obj) (eqv? (enum-type obj) type)))
+   (lambda (enum1 enum2)
+     (eqv? (enum-name enum1) (enum-name enum2)))
+   (lambda (enum1 enum2)
+     (< (enum-ordinal enum1) (enum-ordinal enum2)))
+   ;; TODO: Hash function.
+   #f))
+
+;;;; Predicates
+
+(define (enum-type-contains? type enum)
+  (assume (enum-type? type))
+  (assume (enum? enum))
+  ((comparator-type-test-predicate (enum-type-comparator type)) enum))
+
+(define (%compare-enums enums compare)
+  (if (null? enums)
+      #t
+      (let ((type (enum-type (car enums))))
+        ;; TODO: Improve efficiency and error reporting.
+        (unless (every (lambda (enum)
+                         (enum-type-contains? type enum))
+                       enums)
+          (error "enums must all be of the same type" enums))
+        (apply compare (enum-type-comparator type) enums))))
+
+(define (enum=? . enums) (%compare-enums enums =?))
+
+(define (enum<? . enums) (%compare-enums enums <?))
+
+(define (enum>? . enums) (%compare-enums enums >?))
+
+(define (enum<=? . enums) (%compare-enums enums <=?))
+
+(define (enum>=? . enums) (%compare-enums enums >=?))
 
 ;;;; Enum finders
 
