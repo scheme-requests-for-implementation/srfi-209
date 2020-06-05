@@ -2,6 +2,7 @@
   ;; TODO: cond-expands.
   (import (scheme base)
           (srfi 1)
+          (srfi 113)
           (srfi 128)
           (srfi 145))
 
@@ -19,6 +20,11 @@
           enum-type-names enum-type-values
 
           enum-next enum-prev
+
+          enum-type->enum-set enum-set list->enum-set enum-set-project
+          enum-set-copy
+
+          enum-set? enum-set-contains? enum-set=?
 
           make-enum-comparator
           )

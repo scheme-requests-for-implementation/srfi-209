@@ -32,6 +32,7 @@
     (set-enum-type-comparator! type (make-enum-comparator type))
     type))
 
+;; TODO: Ensure this is good enough.
 (define (make-enum-comparator type)
   (make-comparator
    (lambda (obj)
@@ -40,8 +41,8 @@
      (eqv? (enum-name enum1) (enum-name enum2)))
    (lambda (enum1 enum2)
      (< (enum-ordinal enum1) (enum-ordinal enum2)))
-   ;; TODO: Hash function.
-   #f))
+   (lambda (enum)
+     (symbol-hash (enum-name enum)))))
 
 ;;;; Predicates
 
@@ -54,7 +55,7 @@
   (if (null? enums)
       #t
       (let ((type (enum-type (car enums))))
-        ;; TODO: Improve efficiency and error reporting.
+        ;; TODO: This type check is a bit bogus; improve it.
         (unless (every (lambda (enum)
                          (enum-type-contains? type enum))
                        enums)
@@ -142,3 +143,60 @@
   (let ((ord (enum-ordinal enum)))
     (and (> ord 0)
          (enum-ordinal->enum (enum-type enum) (- ord 1)))))
+
+;;;; Enum set constructors
+
+(define-record-type <enum-set>
+  (make-enum-set type set)
+  enum-set?
+  (type enum-set-type)
+  ;; FIXME: Better name.
+  (set enum-set-set))
+
+(define (enum-type->enum-set type)
+  (assume (enum-type? type))
+  (make-enum-set
+   type
+   (list->set (enum-type-comparator type) (enum-type-enums type))))
+
+(define (enum-set . enums) (list->enum-set enums))
+
+;; TODO: Type check.
+(define (list->enum-set enums)
+  ;; FIXME: This should probably not be an error.  Determine what
+  ;; properties the empty enum set should have.
+  (unless (pair? enums)
+    (error "list->enum-set: empty list"))
+  (let ((type (enum-type (car enums))))
+    (make-enum-set
+     type
+     (list->set (enum-type-comparator type) enums))))
+
+;; TODO: Type check.
+(define (enum-set-project type eset)
+  (assume (enum-type? type))
+  (assume (enum-set? eset))
+  (make-enum-set
+   type
+   (set-map (enum-type-comparator type)
+            (lambda (enum)
+              (enum-name->enum type (enum-name enum)))
+            eset)))
+
+(define (enum-set-copy eset)
+  (make-enum-set (enum-set-type eset) (set-copy (enum-set-set eset))))
+
+;;;; Enum set predicates
+
+(define (enum-set-contains? eset enum)
+  (assume (enum-set? eset))
+  (unless (enum-type-contains? (enum-set-type eset) enum)
+    (error "enum-set-contains?: ill-typed value" enum eset))
+  (set-contains? (enum-set-set eset) enum))
+
+(define (enum-set=? eset1 eset2)
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (unless (eqv? (enum-set-type eset1) (enum-set-type eset2))
+    (error "enum-set=?: enum sets have different types" eset1 eset2))
+  (set=? (enum-set-set eset1) (enum-set-set eset2)))
