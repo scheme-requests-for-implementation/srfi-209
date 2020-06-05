@@ -49,6 +49,27 @@
 
 ;;; Derived procedures
 
+(define (%enum-project type finder key proc)
+  (assume (enum-type? type))
+  (cond ((finder type key) => proc)
+        (else (error "no matching enum found" type key))))
+
+(define (enum-name->ordinal type name)
+  (assume (symbol? name))
+  (%enum-project type enum-name->enum name enum-ordinal))
+
+(define (enum-name->value type name)
+  (assume (symbol? name))
+  (%enum-project type enum-name->enum name enum-value))
+
+(define (enum-ordinal->name type ordinal)
+  (assume (exact-natural? ordinal))
+  (%enum-project type enum-ordinal->enum ordinal enum-name))
+
+(define (enum-ordinal->value type ordinal)
+  (assume (exact-natural? ordinal))
+  (%enum-project type enum-ordinal->enum ordinal enum-value))
+
 ;;;; Enumeration type accessors
 
 (define (enum-type-size type)
