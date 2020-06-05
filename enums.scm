@@ -5,12 +5,10 @@
 
 ;;;; Types
 
-;; Subject to change.
 (define-record-type <enum-type>
-  (make-raw-enum-type data nametab)
+  (make-raw-enum-type enums)
   enum-type?
-  (data enum-type-data set-enum-type-data!)
-  (nametab enum-type-nametab))
+  (enums enum-type-enums set-enum-type-enums!))
 
 (define-record-type <enum>
   (make-enum type name ordinal value)
@@ -20,42 +18,34 @@
   (ordinal enum-ordinal)
   (value enum-value))
 
-(define (make-nametab names)
-  (alist->hash-table
-   (zip names (iota (length names)))
-   ;; TODO: Use a symbol comparator.
-   (make-default-comparator)))
-
-;; TODO: Support values.
+;; This is a very simple representation which stores the enums
+;; in a flat list.  TODO: Find a better representation and support
+;; values.
 (define (make-enum-type names)
-  (let ((type (make-raw-enum-type #f (make-nametab names))))
-    (set-enum-type-data!
-     type
-     (vector-unfold (lambda (i names)
-                      (values (make-enum type (car names) i #f)
-                              (cdr names)))
-                    (length names)
-                    names))
+  (let ((type (make-raw-enum-type #f)))
+    (set-enum-type-enums! type
+                          (map (lambda (name ord)
+                                 (make-enum type name ord #f))
+                               names
+                               (iota (length names))))
     type))
 
 ;;;; Enum finders
 
 ;;; Core procedures
 
-(define (enum-name->enum enum-type symbol)
-  (assume (enum-type? enum-type))
-  (assume (symbol? symbol))
-  (hash-table-ref
-   (enum-type-nametab enum-type)
-   symbol
-   (lambda () #f)
-   (lambda (k) (vector-ref (enum-type-data enum-type) k))))
+(define (enum-name->enum type name)
+  (assume (enum-type? type))
+  (assume (symbol? name))
+  (find (lambda (enum)
+          (eqv? (enum-name enum) name))
+        (enum-type-enums type)))
 
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))
   (assume (exact-natural? ordinal))
   (and (< ordinal (enum-type-size enum-type))
-       (vector-ref (enum-type-data enum-type) ordinal)))
+       (list-ref (enum-type-enums enum-type) ordinal)))
 
 ;;; Derived procedures
 
@@ -63,30 +53,18 @@
 
 (define (enum-type-size type)
   (assume (enum-type? type))
-  (vector-length (enum-type-data type)))
+  (length (enum-type-enums type)))
 
 (define (enum-min type)
   (assume (enum-type? type))
-  (vector-ref (enum-type-data type) 0))
+  (car (enum-type-enums type)))
 
 (define (enum-max type)
   (assume (enum-type? type))
-  (let ((enums (enum-type-data type)))
-    (vector-ref enums (- (vector-length enums) 1))))
-
-(define (%enum-map-type-data->list proc type)
-  (assume (enum-type? type))
-  (vector-fold-right
-   (lambda (lis enum) (cons (proc enum) lis))
-   '()
-   (enum-type-data type)))
-
-(define (enum-type-enums type)
-  (assume (enum-type? type))
-  (vector->list (enum-type-data type)))
+  (last (enum-type-enums type)))
 
 (define (enum-type-names type)
-  (%enum-map-type-data->list enum-name type))
+  (map enum-name (enum-type-enums type)))
 
 (define (enum-type-values type)
-  (%enum-map-type-data->list enum-value type))
+  (map enum-value (enum-type-enums type)))

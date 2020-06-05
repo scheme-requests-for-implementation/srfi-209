@@ -1,10 +1,7 @@
 (define-library (enums)
   ;; TODO: cond-expands.
   (import (scheme base)
-          (only (srfi 1) iota zip)
-          (srfi 125)
-          (srfi 128)
-          (srfi 133)
+          (srfi 1)
           (srfi 145))
 
   (export enum-type? enum?
