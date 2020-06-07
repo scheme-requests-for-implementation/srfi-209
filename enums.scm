@@ -146,20 +146,16 @@
 
 ;;;; Enum set constructors
 
-(define-record-type <enum-set>
-  (make-enum-set type set)
-  enum-set?
-  (type enum-set-type)
-  ;; FIXME: Better name.
-  (set enum-set-set))
-
 (define (enum-type->enum-set type)
   (assume (enum-type? type))
-  (make-enum-set
-   type
-   (list->set (enum-type-comparator type) (enum-type-enums type))))
+  (list->set (enum-type-comparator type) (enum-type-enums type)))
 
 (define (enum-set . enums) (list->enum-set enums))
+
+;; Returns true if enum is of the enum-type that defines eset.
+(define (%enum-matches-enum-set-type? eset enum)
+  ((comparator-type-test-predicate (set-element-comparator eset))
+   enum))
 
 ;; TODO: Type check.
 (define (list->enum-set enums)
@@ -168,35 +164,33 @@
   (unless (pair? enums)
     (error "list->enum-set: empty list"))
   (let ((type (enum-type (car enums))))
-    (make-enum-set
-     type
-     (list->set (enum-type-comparator type) enums))))
+    (list->set (enum-type-comparator type) enums)))
 
 ;; TODO: Type check.
 (define (enum-set-project type eset)
   (assume (enum-type? type))
   (assume (enum-set? eset))
-  (make-enum-set
-   type
-   (set-map (enum-type-comparator type)
-            (lambda (enum)
-              (enum-name->enum type (enum-name enum)))
-            eset)))
+  (set-map (enum-type-comparator type)
+           (lambda (enum)
+             (enum-name->enum type (enum-name enum)))
+           eset))
 
 (define (enum-set-copy eset)
-  (make-enum-set (enum-set-type eset) (set-copy (enum-set-set eset))))
+  (set-copy eset))
 
 ;;;; Enum set predicates
 
+(define (enum-set? obj) (set? obj))
+
 (define (enum-set-contains? eset enum)
   (assume (enum-set? eset))
-  (unless (enum-type-contains? (enum-set-type eset) enum)
+  (assume (enum? enum))
+  (unless (%enum-matches-enum-set-type? eset enum)
     (error "enum-set-contains?: ill-typed value" enum eset))
-  (set-contains? (enum-set-set eset) enum))
+  (set-contains? eset enum))
 
+;; TODO: Ensure set members belong to the same enum-type.
 (define (enum-set=? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (unless (eqv? (enum-set-type eset1) (enum-set-type eset2))
-    (error "enum-set=?: enum sets have different types" eset1 eset2))
-  (set=? (enum-set-set eset1) (enum-set-set eset2)))
+  (set=? eset1 eset2))
