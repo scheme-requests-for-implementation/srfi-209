@@ -34,6 +34,14 @@
 
           enum-set? enum-set-contains? enum-set=?
 
+          enum-set-adjoin! enum-set-delete! enum-set-delete-all!
+
+          enum-set-size enum-set->list enum-set-collect enum-set-for-each
+          enum-set-fold
+
+          enum-set-union! enum-set-intersection! enum-set-difference!
+          enum-set-xor!
+
           make-enum-comparator
           )
 

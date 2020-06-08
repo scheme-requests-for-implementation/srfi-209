@@ -32,6 +32,9 @@
     (set-enum-type-comparator! type (make-enum-comparator type))
     type))
 
+(define (%enum-type=? etype1 etype2)
+  (eqv? etype1 etype2))
+
 ;; TODO: Ensure this is good enough.
 (define (make-enum-comparator type)
   (make-comparator
@@ -213,10 +216,100 @@
                (lambda (result)
                  (enum=? result enum))))
 
-;; TODO: Ensure set members belong to the same enum-type.
+(define (%enum-set-type=? eset1 eset2)
+  (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+
 (define (enum-set=? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
+  (unless (%enum-set-type=? eset1 eset2)
+    (error "enum-set=?: enum sets have different types" eset1 eset2))
   (mapping=? (enum-type-comparator (enum-set-type eset1))
              (enum-set-mapping eset1)
              (enum-set-mapping eset2)))
+
+;;;; Enum set mutators
+
+(define (%ensure-enums-match-enum-set-type eset enums)
+  (cond ((any (lambda (enum)
+                (not (%enum-matches-enum-set-type? eset enum)))
+              enums) =>
+         (lambda (enum) (error "ill-typed enum" enum enum-set)))))
+
+(define (enum-set-adjoin! eset . enums)
+  (assume (enum-set? eset))
+  (%ensure-enums-match-enum-set-type eset enums)
+  (make-enum-set
+   (enum-set-type eset)
+   (fold (lambda (enum mapping)
+           (mapping-adjoin! mapping (enum-ordinal enum) enum))
+         (enum-set-mapping eset)
+         enums)))
+
+(define (enum-set-delete! eset . enums)
+  (assume (enum-set? eset))
+  (enum-set-delete-all! eset enums))
+
+(define (enum-set-delete-all! eset enum-lis)
+  (assume (enum-set? eset))
+  (%ensure-enums-match-enum-set-type eset enum-lis)
+  (make-enum-set
+   (enum-set-type eset)
+   (mapping-delete-all! (enum-set-mapping eset)
+                        (map enum-ordinal enum-lis))))
+
+;;;; Enum set operations
+
+(define (enum-set-size eset)
+  (assume (enum-set? eset))
+  (mapping-size (enum-set-mapping eset)))
+
+(define (enum-set->list eset)
+  (assume (enum-set? eset))
+  (mapping-values (enum-set-mapping eset)))
+
+(define (enum-set-collect proc eset)
+  (assume (procedure? proc))
+  (assume (enum-set? eset))
+  (mapping-map->list (lambda (_ enum) (proc enum))
+                     (enum-set-mapping eset)))
+
+(define (enum-set-for-each proc eset)
+  (assume (procedure? proc))
+  (assume (enum-set? eset))
+  (mapping-for-each (lambda (_ enum) (proc enum))
+                    (enum-set-mapping eset)))
+
+;; FIXME: Order of proc's arguments?
+(define (enum-set-fold proc nil eset)
+  (assume (procedure? proc))
+  (assume (enum-set? eset))
+  (mapping-fold (lambda (_ enum state)
+                  (proc enum state))
+                nil
+                (enum-set-mapping eset)))
+
+;;;; Enum set logical operations
+
+;;; FIXME: May want procedure names in error messages.
+
+(define (%enum-set-logical-op! proc eset1 eset2)
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (unless (%enum-set-type=? eset1 eset2)
+    (error "enum sets have different types" eset1 eset2))
+  (make-enum-set
+   (enum-set-type eset1)
+   (proc (enum-set-mapping eset1) (enum-set-mapping eset2))))
+
+(define (enum-set-union! eset1 eset2)
+  (%enum-set-logical-op! mapping-union! eset1 eset2))
+
+(define (enum-set-intersection! eset1 eset2)
+  (%enum-set-logical-op! mapping-intersection! eset1 eset2))
+
+(define (enum-set-difference! eset1 eset2)
+  (%enum-set-logical-op! mapping-difference! eset1 eset2))
+
+(define (enum-set-xor! eset1 eset2)
+  (%enum-set-logical-op! mapping-xor! eset1 eset2))
