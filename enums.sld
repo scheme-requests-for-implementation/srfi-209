@@ -2,9 +2,17 @@
   ;; TODO: cond-expands.
   (import (scheme base)
           (srfi 1)
-          (srfi 113)
           (srfi 128)
-          (srfi 145))
+          (srfi 145)
+          (srfi 146))
+
+  (cond-expand
+    ((library (srfi 162))
+     (import (only (srfi 162) real-comparator)))
+    (else
+     (begin
+      (define real-comparator
+        (make-comparator real? = < number-hash)))))
 
   (export enum-type? enum? enum-type-contains? enum=? enum<? enum>?
           enum<=? enum>=?

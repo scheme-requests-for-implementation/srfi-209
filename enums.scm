@@ -146,51 +146,77 @@
 
 ;;;; Enum set constructors
 
+(define-record-type <enum-set>
+  (make-enum-set type mapping)
+  enum-set?
+  (type enum-set-type)
+  (mapping enum-set-mapping))
+
+(define (%enum-list->enum-set type enums)
+  (make-enum-set
+   type
+   (mapping-unfold null?
+                   (lambda (enums)
+                     (let ((enum (car enums)))
+                       (unless (enum-type-contains? type enum)
+                         (error "ill-typed enum" enum type))
+                       (values (enum-ordinal enum) enum)))
+                   cdr
+                   enums
+                   real-comparator)))
+
 (define (enum-type->enum-set type)
   (assume (enum-type? type))
-  (list->set (enum-type-comparator type) (enum-type-enums type)))
+  (%enum-list->enum-set type (enum-type-enums type)))
 
 (define (enum-set . enums) (list->enum-set enums))
 
 ;; Returns true if enum is of the enum-type that defines eset.
 (define (%enum-matches-enum-set-type? eset enum)
-  ((comparator-type-test-predicate (set-element-comparator eset))
+  ((comparator-type-test-predicate
+    (enum-type-comparator
+     (enum-set-type eset)))
    enum))
 
-;; TODO: Type check.
 (define (list->enum-set enums)
   ;; FIXME: This should probably not be an error.  Determine what
   ;; properties the empty enum set should have.
   (unless (pair? enums)
     (error "list->enum-set: empty list"))
-  (let ((type (enum-type (car enums))))
-    (list->set (enum-type-comparator type) enums)))
+  (%enum-list->enum-set (enum-type (car enums)) enums))
 
-;; TODO: Type check.
 (define (enum-set-project type eset)
   (assume (enum-type? type))
   (assume (enum-set? eset))
-  (set-map (enum-type-comparator type)
-           (lambda (enum)
-             (enum-name->enum type (enum-name enum)))
-           eset))
+  (make-enum-set
+   type
+   (mapping-map (lambda (_ enum)
+                  (let ((enum* (enum-name->enum type (enum-name enum))))
+                    (values (enum-ordinal enum*) enum*)))
+                real-comparator
+                (enum-set-mapping eset))))
 
 (define (enum-set-copy eset)
-  (set-copy eset))
+  (make-enum-set (enum-set-type eset)
+                 (mapping-copy (enum-set-mapping eset))))
 
 ;;;; Enum set predicates
-
-(define (enum-set? obj) (set? obj))
 
 (define (enum-set-contains? eset enum)
   (assume (enum-set? eset))
   (assume (enum? enum))
   (unless (%enum-matches-enum-set-type? eset enum)
     (error "enum-set-contains?: ill-typed value" enum eset))
-  (set-contains? eset enum))
+  (mapping-ref (enum-set-mapping eset)
+               (enum-ordinal enum)
+               (lambda () #f)
+               (lambda (result)
+                 (enum=? result enum))))
 
 ;; TODO: Ensure set members belong to the same enum-type.
 (define (enum-set=? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (set=? eset1 eset2))
+  (mapping=? (enum-type-comparator (enum-set-type eset1))
+             (enum-set-mapping eset1)
+             (enum-set-mapping eset2)))
