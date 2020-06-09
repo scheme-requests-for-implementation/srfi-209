@@ -54,6 +54,21 @@
     (set-enum-type-comparator! type (make-enum-comparator type))
     type))
 
+;;; TODO: We may want to pass a procedure name to these
+;;; type-checking procs.
+
+;; Check the type of a single enum.
+(define (%ensure-well-typed-enum type enum)
+  (unless (enum-type-contains? type enum)
+    (error "ill-typed enum" type enum)))
+
+;; If any enum in enums is not an element of type, raise an error.
+(define (%ensure-well-typed-enums type enums)
+  (cond ((any (lambda (enum)
+                (not (enum-type-contains? type enum)))
+              enums) =>
+         (lambda (enum) (error "ill-typed enum" enum type)))))
+
 (define (%enum-type=? etype1 etype2)
   (eqv? etype1 etype2))
 
@@ -77,14 +92,9 @@
   ((comparator-type-test-predicate (enum-type-comparator type)) enum))
 
 (define (%compare-enums enums compare)
-  (if (null? enums)
-      #t
+  (or (null? enums)
       (let ((type (enum-type (car enums))))
-        ;; TODO: This type check is a bit bogus; improve it.
-        (unless (every (lambda (enum)
-                         (enum-type-contains? type enum))
-                       enums)
-          (error "enums must all be of the same type" enums))
+        (%ensure-well-typed-enums type enums)
         (apply compare (enum-type-comparator type) enums))))
 
 (define (enum=? . enums) (%compare-enums enums =?))
@@ -196,12 +206,8 @@
 
 (define (enum-set . enums) (list->enum-set enums))
 
-;; Returns true if enum is of the enum-type that defines eset.
-(define (%enum-matches-enum-set-type? eset enum)
-  ((comparator-type-test-predicate
-    (enum-type-comparator
-     (enum-set-type eset)))
-   enum))
+(define (%ensure-enums-match-enum-set-type eset enums)
+  (%ensure-well-typed-enums (enum-set-type eset) enums))
 
 (define (list->enum-set enums)
   ;; FIXME: This should probably not be an error.  Determine what
@@ -229,9 +235,7 @@
 
 (define (enum-set-contains? eset enum)
   (assume (enum-set? eset))
-  (assume (enum? enum))
-  (unless (%enum-matches-enum-set-type? eset enum)
-    (error "enum-set-contains?: ill-typed value" enum eset))
+  (%ensure-well-typed-enum (enum-set-type eset) enum)
   (mapping-ref (enum-set-mapping eset)
                (enum-ordinal enum)
                (lambda () #f)
@@ -251,12 +255,6 @@
              (enum-set-mapping eset2)))
 
 ;;;; Enum set mutators
-
-(define (%ensure-enums-match-enum-set-type eset enums)
-  (cond ((any (lambda (enum)
-                (not (%enum-matches-enum-set-type? eset enum)))
-              enums) =>
-         (lambda (enum) (error "ill-typed enum" enum enum-set)))))
 
 (define (enum-set-adjoin! eset . enums)
   (assume (enum-set? eset))
@@ -312,8 +310,6 @@
                 (enum-set-mapping eset)))
 
 ;;;; Enum set logical operations
-
-;;; FIXME: May want procedure names in error messages.
 
 (define (%enum-set-logical-op! proc eset1 eset2)
   (assume (enum-set? eset1))
