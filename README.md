@@ -2,11 +2,10 @@
 
 This is an implementation of enumerated types for Scheme, based on a
 [pre-SRFI specification](https://bitbucket.org/cowan/r7rs-wg1-infra/src/default/EnumsCowan.md)
-by John Cowan which provides bytestrings for Scheme.  It should be
-portable to any R7RS-small implementation with SRFIs 1, 125, 128,
-and 146.
+by John Cowan.  It should be portable to any R7RS-small implementation
+with SRFIs 1, 125, 128, and 146.
 
-From the pre-SRFI's "Rationale":
+From the pre-SRFI's Rationale:
 
 > Many procedures in many libraries accept arguments from a finite set
 > (usually a fairly small one), or subsets of a finite set to describe
