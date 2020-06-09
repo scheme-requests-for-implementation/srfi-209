@@ -28,9 +28,10 @@
 ;;;; Types
 
 (define-record-type <enum-type>
-  (make-raw-enum-type enums comparator)
+  (make-raw-enum-type enum-vector name-table comparator)
   enum-type?
-  (enums enum-type-enums set-enum-type-enums!)
+  (enum-vector enum-type-enum-vector set-enum-type-enum-vector!)
+  (name-table enum-type-name-table set-enum-type-name-table!)
   (comparator enum-type-comparator set-enum-type-comparator!))
 
 (define-record-type <enum>
@@ -41,18 +42,25 @@
   (ordinal enum-ordinal)
   (value enum-value))
 
-;; This is a very simple representation which stores the enums
-;; in a flat list.  TODO: Find a better representation and support
-;; values.
+;; TODO: Support values.
 (define (make-enum-type names)
-  (let ((type (make-raw-enum-type #f #f)))
-    (set-enum-type-enums! type
-                          (map (lambda (name ord)
-                                 (make-enum type name ord #f))
-                               names
-                               (iota (length names))))
+  (let* ((type (make-raw-enum-type #f #f #f))
+         (enums (map (lambda (name ord)
+                       (make-enum type name ord #f))
+                     names
+                     (iota (length names)))))
+    (set-enum-type-enum-vector! type (list->vector enums))
+    (set-enum-type-name-table! type (make-name-table enums))
     (set-enum-type-comparator! type (make-enum-comparator type))
     type))
+
+(define (make-name-table enums)
+  (hash-table-unfold null?
+                     (lambda (enums)
+                       (values (enum-name (car enums)) (car enums)))
+                     cdr
+                     enums
+                     (make-eqv-comparator)))
 
 ;;; TODO: We may want to pass a procedure name to these
 ;;; type-checking procs.
@@ -114,15 +122,13 @@
 (define (enum-name->enum type name)
   (assume (enum-type? type))
   (assume (symbol? name))
-  (find (lambda (enum)
-          (eqv? (enum-name enum) name))
-        (enum-type-enums type)))
+  (hash-table-ref/default (enum-type-name-table type) name #f))
 
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))
   (assume (exact-natural? ordinal))
   (and (< ordinal (enum-type-size enum-type))
-       (list-ref (enum-type-enums enum-type) ordinal)))
+       (vector-ref (enum-type-enum-vector enum-type) ordinal)))
 
 ;;; Derived procedures
 
@@ -151,21 +157,32 @@
 
 (define (enum-type-size type)
   (assume (enum-type? type))
-  (length (enum-type-enums type)))
+  (vector-length (enum-type-enum-vector type)))
 
 (define (enum-min type)
   (assume (enum-type? type))
-  (car (enum-type-enums type)))
+  (vector-ref (enum-type-enum-vector type) 0))
 
 (define (enum-max type)
   (assume (enum-type? type))
-  (last (enum-type-enums type)))
+  (let ((vec (enum-type-enum-vector type)))
+    (vector-ref vec (- (vector-length vec) 1))))
+
+(define (enum-type-enums type)
+  (assume (enum-type? type))
+  (vector->list (enum-type-enum-vector type)))
 
 (define (enum-type-names type)
-  (map enum-name (enum-type-enums type)))
+  (assume (enum-type? type))
+  (let ((vec (enum-type-enum-vector type)))
+    (list-tabulate (vector-length vec)
+                   (lambda (n) (enum-name (vector-ref vec n))))))
 
 (define (enum-type-values type)
-  (map enum-value (enum-type-enums type)))
+  (assume (enum-type? type))
+  (let ((vec (enum-type-enum-vector type)))
+    (list-tabulate (vector-length vec)
+                   (lambda (n) (enum-value (vector-ref vec n))))))
 
 ;;;; Enum object procedures
 

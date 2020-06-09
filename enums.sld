@@ -2,6 +2,7 @@
   ;; TODO: cond-expands.
   (import (scheme base)
           (srfi 1)
+          (srfi 125)
           (srfi 128)
           (srfi 145)
           (srfi 146))
