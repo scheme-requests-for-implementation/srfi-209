@@ -64,9 +64,9 @@
 
 ;; If any enum in enums is not an element of type, raise an error.
 (define (%ensure-well-typed-enums type enums)
-  (cond ((any (lambda (enum)
-                (not (enum-type-contains? type enum)))
-              enums) =>
+  (cond ((find (lambda (enum)
+                 (not (enum-type-contains? type enum)))
+               enums) =>
          (lambda (enum) (error "ill-typed enum" enum type)))))
 
 (define (%enum-type=? etype1 etype2)
