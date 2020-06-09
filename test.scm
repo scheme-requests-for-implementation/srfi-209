@@ -20,6 +20,7 @@
 ;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (import (scheme base))
+(import (srfi 1))
 (import (enums))
 
 (cond-expand
@@ -63,33 +64,110 @@
 (define always (constantly #t))
 (define never (constantly #f))
 
+(define-syntax catch-exceptions
+  (syntax-rules ()
+    ((_ expr)
+     (guard (_ (else 'exception)) expr))))
+
 ;;;; Test types
 
-(define color
-  (make-enum-type
-   '(red tangerine orange yellow green cyan blue violet)))
+(define color-names
+  '(red tangerine orange yellow green cyan blue violet))
 
-;;;; Enum finders
+(define color (make-enum-type color-names))
+
+(define color-red (enum-name->enum color 'red))
+
+(define color-tangerine (enum-name->enum color 'tangerine))
+
+(define topping
+  (make-enum-type '(peppers onions mushrooms pepperoni)))
+
+(define topping-onions (enum-name->enum topping 'onions))
+
+;;;; Finders and enum accessors
 
 ;;; Later tests make heavy use of these, so test these first.
 
-(define (check-finders)
-  (print-header "Running finders tests...")
+(define (check-finders-and-enum-accessors)
+  (print-header "Running finder and accessor tests...")
 
-  (check (enum-name (enum-name->enum color 'red))              => #t)
+  (check (enum-name (enum-name->enum color 'red))              => 'red)
   (check (enum-ordinal (enum-name->enum color 'red))           => 0)
   (check (eqv? color (enum-type (enum-name->enum color 'red))) => #t)
-  (check (enum-name (enum-name->ordinal color 0))              => #t)
-  (check (enum-ordinal (enum-name->ordinal color 0))           => 0)
-  (check (eqv? color (enum-type (enum-name->ordinal color 0))) => #t)
+  (check (enum-name (enum-ordinal->enum color 0))              => 'red)
+  (check (enum-ordinal (enum-ordinal->enum color 0))           => 0)
+  (check (eqv? color (enum-type (enum-ordinal->enum color 0))) => #t)
   (check (eqv? (enum-name->enum color 'red) (enum-ordinal->enum color 0))
-   => #t))
+   => #t)
+
+  (check (enum-name->ordinal color 'red) => 0)
+  (check (enum-ordinal->name color 0)    => 'red))
 
 ;;;; Predicates
 
 (define (check-predicates)
   (print-header "Running predicate tests...")
 
-  (check (enum-type? color)                   => #t)
-  (check (enum-type? 'z)                      => #f)
-  (check (enum? (enum-name->enum color 'red)) => #t))
+  (check (enum-type? color) => #t)
+  (check (enum-type? 'z)    => #f)
+  (check (enum? color-red)  => #t)
+  (check (enum? 'z)         => #f)
+
+  (check (enum-type-contains? color color-red)      => #t)
+  (check (enum-type-contains? color topping-onions) => #f)
+
+  (check (enum=? (enum-name->enum color 'red)
+                 (enum-ordinal->enum color 0))
+   => #t)
+  (check (catch-exceptions (enum=? color-red topping-onions))
+   => 'exception)
+
+  (check (enum<? color-red color-tangerine)        => #t)
+  (check (enum<? color-tangerine color-tangerine)  => #f)
+  (check (enum<? color-tangerine color-red)        => #f)
+  (check (enum>? color-red color-tangerine)        => #f)
+  (check (enum>? color-tangerine color-tangerine)  => #f)
+  (check (enum>? color-tangerine color-red)        => #t)
+  (check (enum<=? color-red color-tangerine)       => #t)
+  (check (enum<=? color-tangerine color-tangerine) => #t)
+  (check (enum<=? color-tangerine color-red)       => #f)
+  (check (enum>=? color-red color-tangerine)       => #f)
+  (check (enum>=? color-tangerine color-tangerine) => #t)
+  (check (enum>=? color-tangerine color-red)       => #t))
+
+;;;; Enum type accessors
+
+(define (check-enum-type-accessors)
+  (print-header "Running enum-type accessor tests...")
+
+  (check (enum-type-size color)       => (length color-names))
+  (check (enum-name (enum-min color)) => 'red)
+  (check (enum-name (enum-max color)) => 'violet)
+
+  (check (length (enum-type-enums color)) => (enum-type-size color))
+  (check (equal? (map enum-name (enum-type-enums color)) color-names)
+   => #t)
+  (check (equal? (map enum-ordinal (enum-type-enums color))
+                 (iota (enum-type-size color)))
+   => #t)
+
+  (check (equal? (enum-type-names color) color-names) => #t))
+
+(define (check-enum-operations)
+  (print-header "Running enum operation tests...")
+
+  (check (enum=? (enum-next color-red) color-tangerine) => #t)
+  (check (enum=? (enum-prev color-tangerine) color-red) => #t)
+  (check (enum-next (enum-max color))                   => #f)
+  (check (enum-prev (enum-min color))                   => #f))
+
+(define (check-all)
+  (check-finders-and-enum-accessors)
+  (check-predicates)
+  (check-enum-type-accessors)
+  (check-enum-operations)
+
+  (check-report))
+
+;(check-all)
