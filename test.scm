@@ -69,6 +69,22 @@
     ((_ expr)
      (guard (_ (else 'exception)) expr))))
 
+;;; Since there's no exported accessor for the enum-type of an enum-set,
+;;; we can't differentiate between empty enum-sets of different types.
+
+(define (enum-set-empty? eset)
+  (zero? (enum-set-size eset)))
+
+;; Is eset1 a subset of eset2?
+(define (enum-subset? eset1 eset2)
+  (every (lambda (enum)
+           (enum-set-contains? eset2 enum))
+         (enum-set->list eset1)))
+
+;; Run a procedure on fresh copies of two enum sets.
+(define (fresh-sets proc eset1 eset2)
+  (proc (enum-set-copy eset1) (enum-set-copy eset2)))
+
 ;;;; Test types
 
 (define color-names
@@ -81,6 +97,16 @@
 (define color-tangerine (enum-name->enum color 'tangerine))
 
 (define color-set (enum-type->enum-set color))
+
+(define reddish (list->enum-set
+                 (map (lambda (name)
+                        (enum-name->enum color name))
+                      (take color-names 3))))
+
+(define ~reddish (list->enum-set
+                  (map (lambda (ord)
+                         (enum-name->enum color ord))
+                       (drop color-names 3))))
 
 (define pizza
   (make-enum-type '((margherita "tomato and mozzarella")
@@ -186,10 +212,6 @@
   (check (enum-prev (enum-min color))                   => #f))
 
 (define (check-enum-set-basic)
-  (define reddish (enum-set (enum-name->enum color 'red)
-                            (enum-name->enum color 'tangerine)
-                            (enum-name->enum color 'orange)))
-
   (print-header "Running basic enum set tests...")
 
   ;; Ensure that an enum set created from an enum type with
@@ -216,6 +238,46 @@
   (check (enum-set=? color-set (list->enum-set (enum-type-enums color)))
    => #t))
 
+;;;; Enum set mutators
+
+(define (check-enum-set-mutators)
+  (print-header "Running enum-set mutator tests...")
+
+  (let* ((color-green (enum-name->enum color 'green))
+         (reddish+green
+          (enum-set-adjoin! (enum-set-copy reddish) color-green)))
+    (check (enum-subset? reddish reddish+green)          => #t)
+    (check (enum-set-contains? reddish+green color-green) => #t))
+
+  (let* ((color-tangerine (enum-name->enum color 'tangerine))
+         (reddish* (enum-set-delete! (enum-set-copy reddish)
+                                     color-tangerine)))
+    (check (enum-subset? reddish* reddish)              => #t)
+    (check (enum-set-contains? reddish* color-tangerine) => #f))
+
+  (let ((empty-colors (enum-set-delete-all! (enum-set-copy color-set)
+                                            (enum-type-enums color))))
+    (check (enum-set-empty? empty-colors) => #t)))
+
+(define (check-enum-set-logical)
+  (print-header "Running enum-set logical operations...")
+
+  (check (enum-set=? color-set
+                     (fresh-sets enum-set-union! reddish ~reddish))
+   => #t)
+  (check (enum-set-empty?
+          (fresh-sets enum-set-intersection! reddish ~reddish))
+   => #t)
+  (check (enum-set=? ~reddish
+                     (fresh-sets enum-set-difference! color-set reddish))
+   => #t)
+  (check (enum-set=? color-set
+                     (fresh-sets enum-set-xor! reddish ~reddish))
+   => #t)
+  (check (enum-set-empty?
+          (fresh-sets enum-set-xor! reddish reddish))
+   => #t))
+
 (define (check-all)
   (check-finders-and-enum-accessors)
   (check-type-constructor)
@@ -223,6 +285,7 @@
   (check-enum-type-accessors)
   (check-enum-operations)
   (check-enum-set-basic)
+  (check-enum-set-logical)
 
   (check-report))
 
