@@ -80,6 +80,8 @@
 
 (define color-tangerine (enum-name->enum color 'tangerine))
 
+(define color-set (enum-type->enum-set color))
+
 (define topping
   (make-enum-type '(peppers onions mushrooms pepperoni)))
 
@@ -162,11 +164,43 @@
   (check (enum-next (enum-max color))                   => #f)
   (check (enum-prev (enum-min color))                   => #f))
 
+(define (check-enum-set-basic)
+  (define reddish (enum-set (enum-name->enum color 'red)
+                            (enum-name->enum color 'tangerine)
+                            (enum-name->enum color 'orange)))
+
+  (print-header "Running basic enum set tests...")
+
+  ;; Ensure that an enum set created from an enum type with
+  ;; enum-type->enum-set contains every enum of the original type.
+  (check (let ((topping-set (enum-type->enum-set topping)))
+           (every (lambda (enum)
+                    (enum-set-contains? topping-set enum))
+                  (enum-type-enums topping)))
+   => #t)
+
+  (check (enum-set-contains? reddish (enum-name->enum color 'red))
+   => #t)
+  (check (enum-set-contains? reddish (enum-name->enum color 'tangerine))
+   => #t)
+  (check (enum-set-contains? reddish (enum-name->enum color 'blue))
+   => #f)
+
+  (check (catch-exceptions
+           (enum-set (enum-name->enum color 'red)
+                     (enum-name->enum toppings 'peppers))) => 'exception)
+
+  (check (eqv? color-set (enum-set-copy color-set)) => #f)
+
+  (check (enum-set=? color-set (list->enum-set (enum-type-enums color)))
+   => #t))
+
 (define (check-all)
   (check-finders-and-enum-accessors)
   (check-predicates)
   (check-enum-type-accessors)
   (check-enum-operations)
+  (check-enum-set-basic)
 
   (check-report))
 
