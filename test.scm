@@ -82,10 +82,14 @@
 
 (define color-set (enum-type->enum-set color))
 
-(define topping
-  (make-enum-type '(peppers onions mushrooms pepperoni)))
+(define pizza
+  (make-enum-type '((margherita "tomato and mozzarella")
+                    (funghi     "mushrooms")
+                    (bianca     "ricotta and mozzarella")
+                    (chicago    "deep-dish")
+                    (hawaiian   "pineapple and ham"))))
 
-(define topping-onions (enum-name->enum topping 'onions))
+(define pizza-chicago (enum-name->enum pizza 'chicago))
 
 ;;;; Finders and enum accessors
 
@@ -106,6 +110,23 @@
   (check (enum-name->ordinal color 'red) => 0)
   (check (enum-ordinal->name color 0)    => 'red))
 
+;; Ensure make-enum-type accepts only valid name or name+value arguments.
+(define (check-type-constructor)
+  (print-header "Running enum type constructor tests...")
+
+  ;; Mixing name and name+value args.
+  (check (enum-type?
+          (catch-exceptions
+            (make-enum-type
+             '(vanilla (chocolate 2) strawberry (pistachio 4)))))
+   => #t)
+
+  (check (catch-exceptions (make-enum-type '(vanilla 3))) => 'exception)
+  (check (catch-exceptions (make-enum-type '(vanilla (chocolate 2 #t))))
+   => 'exception)
+  (check (catch-exceptions (make-enum-type '(vanilla ("chocolate" 2))))
+   => 'exception))
+
 ;;;; Predicates
 
 (define (check-predicates)
@@ -116,13 +137,13 @@
   (check (enum? color-red)  => #t)
   (check (enum? 'z)         => #f)
 
-  (check (enum-type-contains? color color-red)      => #t)
-  (check (enum-type-contains? color topping-onions) => #f)
+  (check (enum-type-contains? color color-red)     => #t)
+  (check (enum-type-contains? color pizza-chicago) => #f)
 
   (check (enum=? (enum-name->enum color 'red)
                  (enum-ordinal->enum color 0))
    => #t)
-  (check (catch-exceptions (enum=? color-red topping-onions))
+  (check (catch-exceptions (enum=? color-red pizza-chicago))
    => 'exception)
 
   (check (enum<? color-red color-tangerine)        => #t)
@@ -173,10 +194,10 @@
 
   ;; Ensure that an enum set created from an enum type with
   ;; enum-type->enum-set contains every enum of the original type.
-  (check (let ((topping-set (enum-type->enum-set topping)))
+  (check (let ((pizza-set (enum-type->enum-set pizza)))
            (every (lambda (enum)
-                    (enum-set-contains? topping-set enum))
-                  (enum-type-enums topping)))
+                    (enum-set-contains? pizza-set enum))
+                  (enum-type-enums pizza)))
    => #t)
 
   (check (enum-set-contains? reddish (enum-name->enum color 'red))
@@ -188,7 +209,7 @@
 
   (check (catch-exceptions
            (enum-set (enum-name->enum color 'red)
-                     (enum-name->enum toppings 'peppers))) => 'exception)
+                     (enum-name->enum pizza 'margherita))) => 'exception)
 
   (check (eqv? color-set (enum-set-copy color-set)) => #f)
 
@@ -197,6 +218,7 @@
 
 (define (check-all)
   (check-finders-and-enum-accessors)
+  (check-type-constructor)
   (check-predicates)
   (check-enum-type-accessors)
   (check-enum-operations)
