@@ -42,17 +42,22 @@
   (ordinal enum-ordinal)
   (value enum-value))
 
-;; TODO: Support values.
-(define (make-enum-type names)
+(define (make-enum-type names+vals)
   (let* ((type (make-raw-enum-type #f #f #f))
-         (enums (map (lambda (name ord)
-                       (make-enum type name ord #f))
-                     names
-                     (iota (length names)))))
+         (enums (generate-enums type names+vals)))
     (set-enum-type-enum-vector! type (list->vector enums))
     (set-enum-type-name-table! type (make-name-table enums))
     (set-enum-type-comparator! type (make-enum-comparator type))
     type))
+
+(define (generate-enums type names+vals)
+  (map (lambda (elt ord)
+         (cond ((and (pair? elt) (= 2 (length elt)) (symbol? (car elt)))
+                (make-enum type (car elt) ord (cadr elt)))
+               ((symbol? elt) (make-enum type (car elt) ord #f))
+               (else (error "make-enum-type: invalid argument" elt))))
+       names+vals
+       (iota (length names+vals))))
 
 (define symbol-comparator
   (make-comparator symbol?
