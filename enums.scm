@@ -54,13 +54,21 @@
     (set-enum-type-comparator! type (make-enum-comparator type))
     type))
 
+(define symbol-comparator
+  (make-comparator symbol?
+                   eqv?
+                   (lambda (sym1 sym2)
+                     (string<? (symbol->string sym1)
+                               (symbol->string sym2)))
+                   symbol-hash))
+
 (define (make-name-table enums)
   (hash-table-unfold null?
                      (lambda (enums)
                        (values (enum-name (car enums)) (car enums)))
                      cdr
                      enums
-                     (make-eqv-comparator)))
+                     symbol-comparator))
 
 ;;; TODO: We may want to pass a procedure name to these
 ;;; type-checking procs.
