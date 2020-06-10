@@ -23,6 +23,16 @@ From the pre-SRFI's Rationale:
 > useful when translating from C to record the numeric value, but has
 > other uses as well.
 
+
+# Issues
+
+The current enums spec states that the set-theoretical enum set
+procedures (`enum-set-union!`, etc.) may mutate their *first* enum-set
+argument.  Enum sets are currently implemented in terms of SRFI 146
+mappings, and their linear update set-theoretical procedures
+(`mapping-union!`, etc.).  SRFI 146 does not specify which arguments
+may be mutated by these procedures.
+
 # Author
 
 Wolfgang Corcoran-Mathe
