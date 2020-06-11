@@ -75,9 +75,6 @@
                      enums
                      symbol-comparator))
 
-;;; TODO: We may want to pass a procedure name to these
-;;; type-checking procs.
-
 ;; Check the type of a single enum.
 (define (%ensure-well-typed-enum type enum)
   (unless (enum-type-contains? type enum)
@@ -93,7 +90,6 @@
 (define (%enum-type=? etype1 etype2)
   (eqv? etype1 etype2))
 
-;; TODO: Ensure this is good enough.
 (define (make-enum-comparator type)
   (make-comparator
    (lambda (obj)
@@ -240,9 +236,8 @@
   (%ensure-well-typed-enums (enum-set-type eset) enums))
 
 (define (list->enum-set enums)
-  ;; FIXME: This should probably not be an error.  Determine what
-  ;; properties the empty enum set should have.
-  (unless (pair? enums)
+  (assume (or (null? enums) (pair? enums))
+  (when (null? enums)
     (error "list->enum-set: empty list"))
   (%enum-list->enum-set (enum-type (car enums)) enums))
 
