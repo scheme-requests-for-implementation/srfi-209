@@ -4,12 +4,18 @@
           (srfi 1)
           (srfi 125)
           (srfi 128)
-          (srfi 145)
           (srfi 146))
 
   (cond-expand
+    ((library (srfi 145))
+     (import (srfi 145)))
+    (else
+     (begin
+      (define (assume _) #t))))
+
+  (cond-expand
     ((library (srfi 162))
-     (import (only (srfi 162) real-comparator)))
+     (import (srfi 162)))
     (else
      (begin
       (define real-comparator
