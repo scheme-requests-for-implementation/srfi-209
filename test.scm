@@ -108,6 +108,10 @@
                          (enum-name->enum color ord))
                        (drop color-names 3))))
 
+(define empty-colors
+  (enum-set-delete-all! (enum-set-copy color-set)
+                        (enum-type-enums color)))
+
 (define pizza
   (make-enum-type '((margherita "tomato and mozzarella")
                     (funghi     "mushrooms")
@@ -255,12 +259,39 @@
     (check (enum-subset? reddish* reddish)              => #t)
     (check (enum-set-contains? reddish* color-tangerine) => #f))
 
-  (let ((empty-colors (enum-set-delete-all! (enum-set-copy color-set)
-                                            (enum-type-enums color))))
-    (check (enum-set-empty? empty-colors) => #t)))
+  (check (enum-set-empty? empty-colors) => #t))
+
+(define (check-enum-set-operations)
+  (print-header "Running enum-set operations tests...")
+
+  (check (enum-set-size color-set) => (length color-names))
+
+  (check (equal? (enum-set->list color-set) (enum-type-enums color)) => #t)
+
+  (check (= (enum-set-size color-set)
+            (length (enum-set->list color-set)))
+   => #t)
+
+  (check (enum-set-collect enum-name color-set)    => color-names)
+  (check (enum-set-collect enum-name empty-colors) => '())
+
+  (check (let ((n 0))
+           (enum-set-for-each (lambda (_)
+                                (set! n (+ n 1)))
+                              color-set)
+           n)
+   => (length color-names))
+
+  (check (enum-set-fold (lambda (enum lis)
+                          (cons (enum-name enum) lis))
+                        '()
+                        color-set)
+   => (reverse color-names))
+
+  (check (enum-set=? (enum-set-project color reddish) reddish) => #t))
 
 (define (check-enum-set-logical)
-  (print-header "Running enum-set logical operations...")
+  (print-header "Running enum-set logical operations tests...")
 
   (check (enum-set=? color-set
                      (fresh-sets enum-set-union! reddish ~reddish))
@@ -285,8 +316,9 @@
   (check-enum-type-accessors)
   (check-enum-operations)
   (check-enum-set-basic)
+  (check-enum-set-operations)
   (check-enum-set-logical)
 
   (check-report))
 
-;(check-all)
+(check-all)
