@@ -112,12 +112,14 @@
   (enum-set-delete-all! (enum-set-copy color-set)
                         (enum-type-enums color)))
 
-(define pizza
-  (make-enum-type '((margherita "tomato and mozzarella")
-                    (funghi     "mushrooms")
-                    (bianca     "ricotta and mozzarella")
-                    (chicago    "deep-dish")
-                    (hawaiian   "pineapple and ham"))))
+(define pizza-descriptions
+  '((margherita "tomato and mozzarella")
+    (funghi     "mushrooms")
+    (bianca     "ricotta and mozzarella")
+    (chicago    "deep-dish")
+    (hawaiian   "pineapple and ham")))
+
+(define pizza (make-enum-type pizza-descriptions))
 
 (define pizza-chicago (enum-name->enum pizza 'chicago))
 
@@ -136,9 +138,13 @@
   (check (eqv? color (enum-type (enum-ordinal->enum color 0))) => #t)
   (check (eqv? (enum-name->enum color 'red) (enum-ordinal->enum color 0))
    => #t)
+  (check (enum-value (enum-name->enum pizza 'chicago))
+   => "deep-dish")
 
-  (check (enum-name->ordinal color 'red) => 0)
-  (check (enum-ordinal->name color 0)    => 'red))
+  (check (enum-name->ordinal color 'red)  => 0)
+  (check (enum-name->value pizza 'funghi) => "mushrooms")
+  (check (enum-ordinal->name color 0)     => 'red)
+  (check (enum-ordinal->value pizza 1)    => "mushrooms"))
 
 ;; Ensure make-enum-type accepts only valid name or name+value arguments.
 (define (check-type-constructor)
@@ -205,7 +211,11 @@
                  (iota (enum-type-size color)))
    => #t)
 
-  (check (equal? (enum-type-names color) color-names) => #t))
+  (check (equal? (enum-type-names color) color-names) => #t)
+  (check (equal? (enum-type-names pizza)
+                 (map car pizza-descriptions))        => #t)
+  (check (equal? (enum-type-values pizza)
+		 (map cadr pizza-descriptions))       => #t))
 
 (define (check-enum-operations)
   (print-header "Running enum operation tests...")
