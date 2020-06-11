@@ -2,8 +2,7 @@
 
 This is an implementation of enumerated types for Scheme, based on a
 [pre-SRFI specification](https://bitbucket.org/cowan/r7rs-wg1-infra/src/default/EnumsCowan.md)
-by John Cowan.  It should be portable to any R7RS-small implementation
-with SRFIs 1, 125, 128, and 146.
+by John Cowan.
 
 From the pre-SRFI's Rationale:
 
@@ -23,15 +22,35 @@ From the pre-SRFI's Rationale:
 > useful when translating from C to record the numeric value, but has
 > other uses as well.
 
+# Requirements
 
-# Issues
+This library should be portable to any R7RS-small implementation
+with the following libraries from R7RS-large:
+
+* `(scheme list)` ([SRFI 1](https://srfi.schemers.org/srfi-1))
+* `(scheme hash-table)` ([SRFI 125](https://srfi.schemers.org/srfi-125))
+* `(scheme comparator)` ([SRFI 128](https://srfi.schemers.org/srfi-128)
+  with or without [SRFI 162](https://srfi.schemers.org/srfi-162))
+* `(scheme mapping)` ([SRFI 146](https://srfi.schemers.org/srfi-146))
+
+[SRFI 145](https://srfi.schemers.org/srfi-145) is an optional
+dependency.
+
+# Notes and issues
 
 The current enums spec states that the set-theoretical enum set
 procedures (`enum-set-union!`, etc.) may mutate their *first* enum-set
 argument.  Enum sets are currently implemented in terms of SRFI 146
-mappings, and their linear update set-theoretical procedures
+mappings, using their linear update set-theoretical procedures
 (`mapping-union!`, etc.).  SRFI 146 does not specify which arguments
 may be mutated by these procedures.
+
+It is an error to pass `list->enum-set` an empty list, since in this
+case there is no enum type to construct an enum set on.
+
+The current spec has two mutually incompatible definitions of
+`enum-set-project`, one taking two enum sets, and one taking an enum
+type and an enum set.  This library implements the latter version.
 
 # Author
 
