@@ -34,7 +34,8 @@ with the following libraries from R7RS-large:
 * `(scheme mapping)` ([SRFI 146](https://srfi.schemers.org/srfi-146))
 
 [SRFI 145](https://srfi.schemers.org/srfi-145) is an optional
-dependency.
+dependency.  [SRFI 78](https://srfi.schemers.org/srfi-78) is used for
+the test set, which can be run simply by loading `test.scm`.
 
 # Notes and issues
 
