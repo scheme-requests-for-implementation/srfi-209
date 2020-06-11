@@ -53,6 +53,12 @@ The current spec has two mutually incompatible definitions of
 `enum-set-project`, one taking two enum sets, and one taking an enum
 type and an enum set.  This library implements the latter version.
 
+The folded procedure in `enum-set-fold` is applied to the current
+set element and the state value, in that order.  This follows the
+convention of the folds found in most Scheme libraries, in particular
+`(scheme list)` and `(scheme set)`, but seems to be the reverse of
+what the current spec requires.
+
 # Author
 
 Wolfgang Corcoran-Mathe
