@@ -236,7 +236,7 @@
   (%ensure-well-typed-enums (enum-set-type eset) enums))
 
 (define (list->enum-set enums)
-  (assume (or (null? enums) (pair? enums))
+  (assume (or (null? enums) (pair? enums)))
   (when (null? enums)
     (error "list->enum-set: empty list"))
   (%enum-list->enum-set (enum-type (car enums)) enums))
