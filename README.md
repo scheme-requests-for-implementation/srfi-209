@@ -37,28 +37,6 @@ with the following libraries from R7RS-large:
 dependency.  [SRFI 78](https://srfi.schemers.org/srfi-78) is used for
 the test set, which can be run simply by loading `test.scm`.
 
-# Notes and issues
-
-The current enums spec states that the set-theoretical enum set
-procedures (`enum-set-union!`, etc.) may mutate their *first* enum-set
-argument.  Enum sets are currently implemented in terms of SRFI 146
-mappings, using their linear update set-theoretical procedures
-(`mapping-union!`, etc.).  SRFI 146 does not specify which arguments
-may be mutated by these procedures.
-
-It is an error to pass `list->enum-set` an empty list, since in this
-case there is no enum type to construct an enum set on.
-
-The current spec has two mutually incompatible definitions of
-`enum-set-project`, one taking two enum sets, and one taking an enum
-type and an enum set.  This library implements the latter version.
-
-The folded procedure in `enum-set-fold` is applied to the current
-set element and the state value, in that order.  This follows the
-convention of the folds found in most Scheme libraries, in particular
-`(scheme list)` and `(scheme set)`, but seems to be the reverse of
-what the current spec requires.
-
 # Author
 
 Wolfgang Corcoran-Mathe
