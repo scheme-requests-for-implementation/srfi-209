@@ -64,11 +64,6 @@
 (define always (constantly #t))
 (define never (constantly #f))
 
-(define-syntax catch-exceptions
-  (syntax-rules ()
-    ((_ expr)
-     (guard (_ (else 'exception)) expr))))
-
 ;;; Since there's no exported accessor for the enum-type of an enum-set,
 ;;; we can't differentiate between empty enum-sets of different types.
 
@@ -152,16 +147,8 @@
 
   ;; Mixing name and name+value args.
   (check (enum-type?
-          (catch-exceptions
-            (make-enum-type
-             '(vanilla (chocolate 2) strawberry (pistachio 4)))))
-   => #t)
-
-  (check (catch-exceptions (make-enum-type '(vanilla 3))) => 'exception)
-  (check (catch-exceptions (make-enum-type '(vanilla (chocolate 2 #t))))
-   => 'exception)
-  (check (catch-exceptions (make-enum-type '(vanilla ("chocolate" 2))))
-   => 'exception))
+          (make-enum-type
+           '(vanilla (chocolate 2) strawberry (pistachio 4)))) => #t))
 
 ;;;; Predicates
 
@@ -179,8 +166,6 @@
   (check (enum=? (enum-name->enum color 'red)
                  (enum-ordinal->enum color 0))
    => #t)
-  (check (catch-exceptions (enum=? color-red pizza-chicago))
-   => 'exception)
 
   (check (enum<? color-red color-tangerine)        => #t)
   (check (enum<? color-tangerine color-tangerine)  => #f)
@@ -215,7 +200,7 @@
   (check (equal? (enum-type-names pizza)
                  (map car pizza-descriptions))        => #t)
   (check (equal? (enum-type-values pizza)
-		 (map cadr pizza-descriptions))       => #t))
+                 (map cadr pizza-descriptions))       => #t))
 
 (define (check-enum-operations)
   (print-header "Running enum operation tests...")
@@ -242,10 +227,6 @@
    => #t)
   (check (enum-set-contains? reddish (enum-name->enum color 'blue))
    => #f)
-
-  (check (catch-exceptions
-           (enum-set (enum-name->enum color 'red)
-                     (enum-name->enum pizza 'margherita))) => 'exception)
 
   (check (eqv? color-set (enum-set-copy color-set)) => #f)
 
