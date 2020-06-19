@@ -136,8 +136,9 @@
 
 (define (%enum-project type finder key proc)
   (assume (enum-type? type))
-  (cond ((finder type key) => proc)
-        (else (error "no matching enum found" type key))))
+  (let ((enum (finder type key)))
+    (assume (enum? enum))
+    (proc enum)))
 
 (define (enum-name->ordinal type name)
   (assume (symbol? name))
