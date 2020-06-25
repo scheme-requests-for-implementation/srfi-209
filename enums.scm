@@ -68,12 +68,12 @@
                    symbol-hash))
 
 (define (make-name-table enums)
-  (hash-table-unfold null?
-                     (lambda (enums)
-                       (values (enum-name (car enums)) (car enums)))
-                     cdr
-                     enums
-                     symbol-comparator))
+  (mapping-unfold null?
+                  (lambda (enums)
+                    (values (enum-name (car enums)) (car enums)))
+                  cdr
+                  enums
+                  symbol-comparator))
 
 ;; Check the type of a single enum.
 ;; If any enum in enums is not an element of type, raise an error.
@@ -124,7 +124,7 @@
 (define (enum-name->enum type name)
   (assume (enum-type? type))
   (assume (symbol? name))
-  (hash-table-ref/default (enum-type-name-table type) name #f))
+  (mapping-ref/default (enum-type-name-table type) name #f))
 
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))
