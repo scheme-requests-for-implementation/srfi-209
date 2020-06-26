@@ -28,7 +28,6 @@ This library should be portable to any R7RS-small implementation
 with the following libraries from R7RS-large:
 
 * `(scheme list)` ([SRFI 1](https://srfi.schemers.org/srfi-1))
-* `(scheme hash-table)` ([SRFI 125](https://srfi.schemers.org/srfi-125))
 * `(scheme comparator)` ([SRFI 128](https://srfi.schemers.org/srfi-128)
   with or without [SRFI 162](https://srfi.schemers.org/srfi-162))
 * `(scheme mapping)` ([SRFI 146](https://srfi.schemers.org/srfi-146))
