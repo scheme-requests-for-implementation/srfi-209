@@ -68,7 +68,7 @@
                    symbol-hash))
 
 (define (make-name-table enums)
-  (mapping-unfold null?
+  (hashmap-unfold null?
                   (lambda (enums)
                     (values (enum-name (car enums)) (car enums)))
                   cdr
@@ -124,7 +124,7 @@
 (define (enum-name->enum type name)
   (assume (enum-type? type))
   (assume (symbol? name))
-  (mapping-ref/default (enum-type-name-table type) name #f))
+  (hashmap-ref/default (enum-type-name-table type) name #f))
 
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))
