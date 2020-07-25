@@ -21,7 +21,7 @@
 
 (import (scheme base))
 (import (srfi 1))
-(import (enums))
+(import (srfi 205))
 
 (cond-expand
   ((library (srfi 78))

@@ -1,5 +1,4 @@
-(define-library (enums)
-  ;; TODO: cond-expands.
+(define-library (srfi 205)
   (import (scheme base)
           (srfi 1)
           (srfi 128)
@@ -51,4 +50,4 @@
           make-enum-comparator
           )
 
-  (include "enums.scm"))
+  (include "205.scm"))
