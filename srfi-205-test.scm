@@ -28,10 +28,9 @@
    (import (srfi 78)))
   (else
     (begin
+      (define *tests-failed* 0)
       (define-syntax check
         (syntax-rules (=>)
-          ((check expr)
-           (check expr => #t))
           ((check expr => expected)
            (if (equal? expr expected)
              (begin
@@ -41,6 +40,7 @@
                (display " ; correct")
                (newline))
              (begin
+               (set! *tests-failed* (+ *tests-failed* 1))
                (display "FAILED: for ")
                (display 'expr)
                (display " expected ")
@@ -48,7 +48,15 @@
                (display " but got ")
                (display expr)
                (newline))))))
-      (define (check-report) #t))))
+      (define (check-report)
+        (if (zero? *tests-failed*)
+            (begin
+             (display "All tests passed.")
+             (newline))
+            (begin
+             (display "TESTS FAILED: ")
+             (display *tests-failed*)
+             (newline)))))))
 
 ;;;; Utility
 
