@@ -31,10 +31,12 @@ with the following libraries from R7RS-large:
 * `(scheme comparator)` ([SRFI 128](https://srfi.schemers.org/srfi-128)
   with or without [SRFI 162](https://srfi.schemers.org/srfi-162))
 * `(scheme mapping)` ([SRFI 146](https://srfi.schemers.org/srfi-146))
+  and `(scheme mapping hash)`.
 
 [SRFI 145](https://srfi.schemers.org/srfi-145) is an optional
 dependency.  [SRFI 78](https://srfi.schemers.org/srfi-78) is used for
-the test set, which can be run simply by loading `test.scm`.
+the test set, which can be run simply by loading `test.scm`.  A basic
+fallback framework is provided for Schemes without SRFI 78.
 
 # Author
 
