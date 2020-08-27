@@ -1,4 +1,4 @@
-(define-library (srfi 205)
+(define-library (srfi 209)
   (import (scheme base)
           (srfi 1)
           (srfi 128)
@@ -51,4 +51,4 @@
           make-enum-comparator
           )
 
-  (include "205.scm"))
+  (include "209.scm"))
