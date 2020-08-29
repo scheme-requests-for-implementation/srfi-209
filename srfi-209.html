@@ -56,12 +56,12 @@ belongs, its name (a symbol), its ordinal (an exact integer), and its value
 by name or ordinal.</p>
 <p><em>Enumeration sets</em> are used to represent multiple enums that belong 
 to the same type. They provide a subset of the operations provided by <a 
-href="http://srfi.schemers.org/srfi-113/srfi-113.html">SRFI 113</a> general 
+href="https://srfi.schemers.org/srfi-113/srfi-113.html">SRFI 113</a> general 
 sets.</p>
 <p>Specialized mappings from enums to arbitrary values will be described in a 
 future SRFI. Meanwhile either general-purpose hash tables from <a 
-href="http://srfi.schemers.org/srfi-125/srfi-125.html">SRFI 125</a> or 
-elsewhere, or <a href="http://srfi.schemers.org/srfi-146/srfi-146.html">SRFI 
+href="https://srfi.schemers.org/srfi-125/srfi-125.html">SRFI 125</a> or 
+elsewhere, or <a href="https://srfi.schemers.org/srfi-146/srfi-146.html">SRFI 
 146</a> mappings can be used instead.</p>
 
 <h2 id="specification">Specification</h2>
@@ -169,7 +169,7 @@ an ordinal one less than <em>enum</em>. Returns <code>#f</code> if there is no
 such enum.</p>
 <h3 id="comparators">Comparators</h3>
 <p><code>(make-enum-comparator</code>&nbsp;<em>enum-type</em><code>)</code></p>
-<p>Returns a <a href="http://srfi.schemers.org/srfi-128/srfi-128.html">SRFI 
+<p>Returns a <a href="https://srfi.schemers.org/srfi-128/srfi-128.html">SRFI 
 128</a> comparator suitable for comparing enums that belong to 
 <em>enum-type</em>. The comparator contains both an ordering predicate and a 
 hash function, and orders enums based on their ordinal values.</p>
