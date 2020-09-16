@@ -21,7 +21,7 @@
 
 (import (scheme base))
 (import (srfi 1))
-(import (srfi 205))
+(import (srfi 209))
 
 (cond-expand
   ((library (srfi 78))
