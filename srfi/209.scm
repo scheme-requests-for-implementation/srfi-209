@@ -107,7 +107,11 @@
         (assume (%well-typed-enums type enums))
         (apply compare (enum-type-comparator type) enums))))
 
-(define (enum=? . enums) (%compare-enums enums =?))
+(define (enum=? . enums)
+  (or (null? enums)
+      (let ((e1 (car enums)))
+        (assume (enum? e1))
+        (every (lambda (e) (eq? e1 e)) (cdr enums)))))
 
 (define (enum<? . enums) (%compare-enums enums <?))
 
