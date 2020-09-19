@@ -75,11 +75,6 @@
                   enums
                   symbol-comparator))
 
-;; Check the type of a single enum.
-;; If any enum in enums is not an element of type, raise an error.
-(define (%well-typed-enums type enums)
-  (every (lambda (enum) (enum-type-contains? type enum)) enums))
-
 (define (%enum-type=? etype1 etype2)
   (eqv? etype1 etype2))
 
@@ -101,11 +96,14 @@
   (assume (enum? enum))
   ((comparator-type-test-predicate (enum-type-comparator type)) enum))
 
+(define (%enum-type-contains?/no-check type enum)
+  ((comparator-type-test-predicate (enum-type-comparator type)) enum))
+
 (define (%compare-enums enums compare)
   (or (null? enums)
-      (let ((type (enum-type (car enums))))
-        (assume (%well-typed-enums type enums))
-        (apply compare (enum-type-comparator type) enums))))
+      (apply compare
+             (enum-type-comparator (enum-type (car enums)))
+             enums)))
 
 (define (enum=? . enums)
   (or (null? enums)
@@ -276,13 +274,14 @@
 
 (define (enum-set-adjoin! eset . enums)
   (assume (enum-set? eset))
-  (assume (%well-typed-enums (enum-set-type eset) enums))
-  (make-enum-set
-   (enum-set-type eset)
-   (fold (lambda (enum mapping)
-           (mapping-adjoin! mapping (enum-ordinal enum) enum))
-         (enum-set-mapping eset)
-         enums)))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (fold (lambda (enum mapping)
+             (assume (%enum-type-contains?/no-check type enum))
+             (mapping-adjoin! mapping (enum-ordinal enum) enum))
+           (enum-set-mapping eset)
+           enums))))
 
 (define (enum-set-delete! eset . enums)
   (assume (enum-set? eset))
@@ -290,7 +289,6 @@
 
 (define (enum-set-delete-all! eset enum-lis)
   (assume (enum-set? eset))
-  (assume (%well-typed-enums (enum-set-type eset) enum-lis))
   (make-enum-set
    (enum-set-type eset)
    (mapping-delete-all! (enum-set-mapping eset)
