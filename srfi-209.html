@@ -87,16 +87,16 @@ otherwise.</p>
 enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> belongs to <em>enum-type</em>, and
 <code>#f</code> otherwise.</p>
-<p><code>(enum=?</code>&nbsp;<em>enum</em> …<code>)</code></p>
+<p><code>(enum=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
 <p>Returns <code>#t</code> if all the arguments are the same enum 
 in the sense of <code>eq?</code> (which is equivalent to
 having the same name and ordinal) and
 <code>#f</code> otherwise. It is an error to apply <code>enum=?</code> to enums 
 belonging to different enum types.</p>
-<p><code>(enum&lt;?</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p><code>(enum&gt;?</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p><code>(enum&lt;=?</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p><code>(enum&gt;=?</code>&nbsp;<em>enum</em> …<code>)</code></p>
+<p><code>(enum&lt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
+<p><code>(enum&gt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
+<p><code>(enum&lt;=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
+<p><code>(enum&gt;=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
 <p>These predicates return <code>#t</code> if their arguments are enums whose
 ordinals are in increasing, decreasing, non-decreasing, and non-increasing
 order respectively, and <code>#f</code> otherwise. It is an error unless all of
