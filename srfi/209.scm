@@ -102,11 +102,14 @@
 (define (%well-typed-enum? type obj)
   (and (enum? obj) (%enum-type-contains?/no-check type obj)))
 
-(define (%compare-enums enums compare)
-  (or (null? enums)
-      (apply compare
-             (enum-type-comparator (enum-type (car enums)))
-             enums)))
+(define (%compare-enums compare enums)
+  (assume (and (pair? enums) (pair? (cdr enums)))
+          "Invalid number of arguments")
+  (assume (enum? (car enums)))
+  (let ((type (enum-type (car enums))))
+    (assume (every (lambda (e) (%well-typed-enum? type e)) (cdr enums))
+            "All enums must be of the same enum type")
+    (apply compare (enum-type-comparator type) enums)))
 
 (define (enum=? enum0 enum1 . enums)
   (assume (enum? enum0))
@@ -119,13 +122,13 @@
 		      (eq? enum0 e))
 		    enums)))))
 
-(define (enum<? . enums) (%compare-enums enums <?))
+(define (enum<? . enums) (%compare-enums <? enums))
 
-(define (enum>? . enums) (%compare-enums enums >?))
+(define (enum>? . enums) (%compare-enums >? enums))
 
-(define (enum<=? . enums) (%compare-enums enums <=?))
+(define (enum<=? . enums) (%compare-enums <=? enums))
 
-(define (enum>=? . enums) (%compare-enums enums >=?))
+(define (enum>=? . enums) (%compare-enums >=? enums))
 
 ;;;; Enum finders
 
