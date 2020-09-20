@@ -284,8 +284,8 @@
             (length (enum-set->list color-set)))
    => #t)
 
-  (check (enum-set-collect enum-name color-set)    => color-names)
-  (check (enum-set-collect enum-name empty-colors) => '())
+  (check (enum-set-map->list enum-name color-set)    => color-names)
+  (check (enum-set-map->list enum-name empty-colors) => '())
 
   (check (let ((n 0))
            (enum-set-for-each (lambda (_)

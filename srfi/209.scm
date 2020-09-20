@@ -315,7 +315,7 @@
   (assume (enum-set? eset))
   (mapping-values (enum-set-mapping eset)))
 
-(define (enum-set-collect proc eset)
+(define (enum-set-map->list proc eset)
   (assume (procedure? proc))
   (assume (enum-set? eset))
   (mapping-map->list (lambda (_ enum) (proc enum))
