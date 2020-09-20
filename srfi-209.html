@@ -222,8 +222,7 @@ members of <em>enum-set</em>.</p>
 and <code>#f</code> otherwise.</p>
 <p><code>(enum-set-disjoint?</code>&nbsp;<em>enum-set<sub>1</sub> enum-set<sub>2</sub></em><code>)</code></p>
 Returns <code>#t</code> if <em>enum-set<sub>1</sub></em> and <em>enum-set<sub>2</sub></em>
-do not have any enum objects in common, and <code>#f</code> otherwise.
-It is an error if the enum sets belong to different enum types.
+do not have any enum objects in common, and <code>#f</code> otherwise.</p>
 <p><code>(enum-set-contains?</code>&nbsp;<em>enum-set
 enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> is a member of <em>enum-set</em>.
@@ -259,13 +258,11 @@ to the same enum type.</p>
 <p><code>(enum-set-delete!</code>&nbsp;<em>enum-set enum</em>
 …<code>)</code></p>
 <p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
-the <em>enums</em>. It is an error if the members of the result do not all
-belong to the same enum type.</p>
+the <em>enums</em>.</p>
 <p><code>(enum-set-delete-all!</code>&nbsp;<em>enum-set list</em>
 …<code>)</code></p>
 <p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
-the members of <em>list</em>. It is an error if the members of the result do
-not all belong to the same enum type.</p>
+the members of <em>list</em>.</p>
 <h3 id="enum-set-operations">Enum set operations</h3>
 <p><code>(enum-set-size</code>&nbsp;<em>enum-set</em><code>)</code></p>
 <p>Returns the number of elements in <em>enum-set</em>.</p>
