@@ -99,6 +99,10 @@
 
 (define color-tangerine (enum-name->enum color 'tangerine))
 
+(define color-blue (enum-name->enum color 'blue))
+
+(define color-green (enum-name->enum color 'green))
+
 (define color-set (enum-type->enum-set color))
 
 (define reddish (list->enum-set
@@ -171,22 +175,31 @@
   (check (enum-type-contains? color color-red)     => #t)
   (check (enum-type-contains? color pizza-chicago) => #f)
 
-  (check (enum=? (enum-name->enum color 'red)
-                 (enum-ordinal->enum color 0))
-   => #t)
+  (check (enum=? color-red (enum-ordinal->enum color 0)) => #t)
+  (check (enum=? color-red color-tangerine)              => #f)
+  (check (enum=? color-red color-red color-red)          => #t)
+  (check (enum=? color-red color-red color-tangerine)    => #f)
 
   (check (enum<? color-red color-tangerine)        => #t)
   (check (enum<? color-tangerine color-tangerine)  => #f)
   (check (enum<? color-tangerine color-red)        => #f)
+  (check (enum<? color-red color-green color-blue) => #t)
+  (check (enum<? color-red color-blue color-blue)  => #f)
   (check (enum>? color-red color-tangerine)        => #f)
   (check (enum>? color-tangerine color-tangerine)  => #f)
   (check (enum>? color-tangerine color-red)        => #t)
+  (check (enum>? color-blue color-green color-red) => #t)
+  (check (enum>? color-blue color-red color-red)   => #f)
   (check (enum<=? color-red color-tangerine)       => #t)
   (check (enum<=? color-tangerine color-tangerine) => #t)
   (check (enum<=? color-tangerine color-red)       => #f)
+  (check (enum<=? color-red color-blue color-blue) => #t)
+  (check (enum<=? color-blue color-blue color-red) => #f)
   (check (enum>=? color-red color-tangerine)       => #f)
   (check (enum>=? color-tangerine color-tangerine) => #t)
-  (check (enum>=? color-tangerine color-red)       => #t))
+  (check (enum>=? color-tangerine color-red)       => #t)
+  (check (enum>=? color-blue color-red color-red)  => #t)
+  (check (enum>=? color-blue color-red color-blue) => #f))
 
 ;;;; Enum type accessors
 
