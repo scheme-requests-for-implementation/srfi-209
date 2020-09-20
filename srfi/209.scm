@@ -99,17 +99,25 @@
 (define (%enum-type-contains?/no-check type enum)
   ((comparator-type-test-predicate (enum-type-comparator type)) enum))
 
+(define (%well-typed-enum? type obj)
+  (and (enum? obj) (%enum-type-contains?/no-check type obj)))
+
 (define (%compare-enums enums compare)
   (or (null? enums)
       (apply compare
              (enum-type-comparator (enum-type (car enums)))
              enums)))
 
-(define (enum=? . enums)
-  (or (null? enums)
-      (let ((e1 (car enums)))
-        (assume (enum? e1))
-        (every (lambda (e) (eq? e1 e)) (cdr enums)))))
+(define (enum=? enum0 enum1 . enums)
+  (assume (enum? enum0))
+  (let ((type (enum-type enum0)))
+    (assume (%well-typed-enum? type enum1))
+    (and (eq? enum0 enum1)
+         (or (null? enums)
+             (every (lambda (e)
+		      (assume (%well-typed-enum? type e))
+		      (eq? enum0 e))
+		    enums)))))
 
 (define (enum<? . enums) (%compare-enums enums <?))
 
