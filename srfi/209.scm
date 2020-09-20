@@ -321,6 +321,18 @@
   (mapping-map->list (lambda (_ enum) (proc enum))
                      (enum-set-mapping eset)))
 
+(define (enum-set-filter pred eset)
+  (assume (enum-set? eset))
+  (make-enum-set (enum-set-type eset)
+                 (mapping-filter (lambda (_ enum) (pred enum))
+                                 (enum-set-mapping eset))))
+
+(define (enum-set-remove pred eset)
+  (assume (enum-set? eset))
+  (make-enum-set (enum-set-type eset)
+                 (mapping-remove (lambda (_ enum) (pred enum))
+                                 (enum-set-mapping eset))))
+
 (define (enum-set-for-each proc eset)
   (assume (procedure? proc))
   (assume (enum-set? eset))
