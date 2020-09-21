@@ -272,14 +272,47 @@
 (define (%enum-set-type=? eset1 eset2)
   (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
 
-(define (enum-set=? eset1 eset2)
+(define (enum-set-empty? eset)
+  (assume (enum-set? eset))
+  (mapping-empty? (enum-set-mapping eset)))
+
+(define (enum-set-disjoint? eset1 eset2)
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (mapping-disjoint? (enum-set-mapping eset1) (enum-set-mapping eset2)))
+
+(define (%compare-enum-sets compare eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-set-type=? eset1 eset2)
-          "enum-set=?: enum sets have different types")
-  (mapping=? (enum-type-comparator (enum-set-type eset1))
-             (enum-set-mapping eset1)
-             (enum-set-mapping eset2)))
+          "enum sets have different types")
+  (compare (enum-type-comparator (enum-set-type eset1))
+           (enum-set-mapping eset1)
+           (enum-set-mapping eset2)))
+
+(define (enum-set=? eset1 eset2)
+  (%compare-enum-sets mapping=? eset1 eset2))
+
+(define (enum-set<? eset1 eset2)
+  (%compare-enum-sets mapping<? eset1 eset2))
+
+(define (enum-set>? eset1 eset2)
+  (%compare-enum-sets mapping>? eset1 eset2))
+
+(define (enum-set<=? eset1 eset2)
+  (%compare-enum-sets mapping<=? eset1 eset2))
+
+(define (enum-set>=? eset1 eset2)
+  (%compare-enum-sets mapping>=? eset1 eset2))
+
+(define (enum-set-any? pred eset)
+  (assume (enum-set? eset))
+  (mapping-any? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
+
+(define (enum-set-every? pred eset)
+  (assume (enum-set? eset))
+  (mapping-every? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
 
 ;;;; Enum set mutators
 
@@ -320,6 +353,11 @@
   (assume (enum-set? eset))
   (mapping-map->list (lambda (_ enum) (proc enum))
                      (enum-set-mapping eset)))
+
+(define (enum-set-count pred eset)
+  (assume (enum-set? eset))
+  (mapping-count (lambda (_ enum) (pred enum))
+                 (enum-set-mapping eset)))
 
 (define (enum-set-filter pred eset)
   (assume (enum-set? eset))
