@@ -118,9 +118,9 @@
     (and (eq? enum0 enum1)
          (or (null? enums)
              (every (lambda (e)
-		      (assume (%well-typed-enum? type e))
-		      (eq? enum0 e))
-		    enums)))))
+                      (assume (%well-typed-enum? type e))
+                      (eq? enum0 e))
+                    enums)))))
 
 (define (enum<? . enums) (%compare-enums <? enums))
 
@@ -169,7 +169,7 @@
   (assume (exact-natural? ordinal))
   (%enum-project type enum-ordinal->enum ordinal enum-value))
 
-;;;; Enumeration type accessors
+;;;; Enum type accessors
 
 (define (enum-type-size type)
   (assume (enum-type? type))
@@ -285,8 +285,7 @@
 (define (%compare-enum-sets compare eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (assume (%enum-set-type=? eset1 eset2)
-          "enum sets have different types")
+  (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
   (compare (enum-type-comparator (enum-set-type eset1))
            (enum-set-mapping eset1)
            (enum-set-mapping eset2)))
@@ -377,7 +376,6 @@
   (mapping-for-each (lambda (_ enum) (proc enum))
                     (enum-set-mapping eset)))
 
-;; FIXME: Order of proc's arguments?
 (define (enum-set-fold proc nil eset)
   (assume (procedure? proc))
   (assume (enum-set? eset))
@@ -391,8 +389,7 @@
 (define (%enum-set-logical-op! proc eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (assume (%enum-set-type=? eset1 eset2)
-          "enum sets have different types")
+  (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
   (make-enum-set
    (enum-set-type eset1)
    (proc (enum-set-mapping eset1) (enum-set-mapping eset2))))
