@@ -19,10 +19,10 @@
 ;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(import (scheme base))
-(import (srfi 1))
-(import (srfi 128))
-(import (srfi 209))
+(import (scheme base)
+        (srfi 1)
+        (srfi 128)
+        (srfi 209))
 
 (cond-expand
   ((library (srfi 78))
@@ -58,7 +58,7 @@
              (display "TESTS FAILED: ")
              (display *tests-failed*)
              (newline)))))))
-
+
 ;;;; Utility
 
 (define (print-header message)
@@ -150,7 +150,6 @@
   (check (enum-ordinal->value color 6)    => 6)
 )
 
-;; Ensure make-enum-type accepts only valid name or name+value arguments.
 (define (check-type-constructor)
   (print-header "Running enum type constructor tests...")
 
@@ -199,7 +198,8 @@
   (check (enum>=? color-tangerine color-tangerine) => #t)
   (check (enum>=? color-tangerine color-red)       => #t)
   (check (enum>=? color-blue color-red color-red)  => #t)
-  (check (enum>=? color-blue color-red color-blue) => #f))
+  (check (enum>=? color-blue color-red color-blue) => #f)
+)
 
 ;;;; Enum type accessors
 
@@ -464,7 +464,8 @@
    => #t)
   (check (enum-set-empty?
           (fresh-sets enum-set-xor! reddish reddish))
-   => #t))
+   => #t)
+)
 
 (define (check-all)
   (check-finders-and-enum-accessors)
