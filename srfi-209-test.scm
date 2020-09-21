@@ -72,18 +72,6 @@
 (define always (constantly #t))
 (define never (constantly #f))
 
-;;; Since there's no exported accessor for the enum-type of an enum-set,
-;;; we can't differentiate between empty enum-sets of different types.
-
-(define (enum-set-empty? eset)
-  (zero? (enum-set-size eset)))
-
-;; Is eset1 a subset of eset2?
-(define (enum-subset? eset1 eset2)
-  (every (lambda (enum)
-           (enum-set-contains? eset2 enum))
-         (enum-set->list eset1)))
-
 ;; Run a procedure on fresh copies of two enum sets.
 (define (fresh-sets proc eset1 eset2)
   (proc (enum-set-copy eset1) (enum-set-copy eset2)))
@@ -249,10 +237,54 @@
   (check (enum-set-contains? reddish (enum-name->enum color 'blue))
    => #f)
 
-  (check (eqv? color-set (enum-set-copy color-set)) => #f)
+  (check (enum-set-empty? empty-colors) => #t)
+  (check (enum-set-empty? color-set)    => #f)
 
-  (check (enum-set=? color-set (list->enum-set (enum-type-enums color)))
-   => #t))
+  (check (eqv? color-set (enum-set-copy color-set)) => #f)
+)
+
+;;;; Enum set predicates
+
+(define (check-enum-set-predicates)
+  (check (enum-set-disjoint? color-set empty-colors) => #t)
+  (check (enum-set-disjoint? color-set reddish)      => #f)
+  (check (enum-set-disjoint? reddish ~reddish)       => #t)
+
+  ;;; comparisons
+
+  (check (enum-set=? color-set (enum-set-copy color-set)) => #t)
+
+  (check (enum-set=? color-set empty-colors) => #f)
+  (check (enum-set<? reddish color-set)      => #t)
+  (check (enum-set<? color-set reddish)      => #f)
+  (check (enum-set<? color-set color-set)    => #f)
+  (check (enum-set>? reddish color-set)      => #f)
+  (check (enum-set>? color-set reddish)      => #t)
+  (check (enum-set>? color-set color-set)    => #f)
+  (check (enum-set<=? reddish color-set)     => #t)
+  (check (enum-set<=? color-set reddish)     => #f)
+  (check (enum-set<=? color-set color-set)   => #t)
+  (check (enum-set>=? reddish color-set)     => #f)
+  (check (enum-set>=? color-set reddish)     => #t)
+  (check (enum-set>=? color-set color-set)   => #t)
+
+  ;;; any & every
+
+  (check (enum-set-any? (lambda (e) (eq? 'green (enum-name e)))
+                        color-set)
+   => #t)
+  (check (enum-set-any? (lambda (e) (eq? 'mauve (enum-name e)))
+                        color-set)
+   => #f)
+  (check (enum-set-any? never empty-colors) => #f)
+  (check (enum-set-every? (lambda (e) (eq? 'green (enum-name e)))
+                          color-set)
+   => #f)
+  (check (enum-set-every? (lambda (e) (< (enum-ordinal e) 10))
+                          color-set)
+   => #t)
+  (check (enum-set-every? never empty-colors) => #t)
+)
 
 ;;;; Enum set mutators
 
@@ -262,13 +294,13 @@
   (let* ((color-green (enum-name->enum color 'green))
          (reddish+green
           (enum-set-adjoin! (enum-set-copy reddish) color-green)))
-    (check (enum-subset? reddish reddish+green)          => #t)
+    (check (enum-set<? reddish reddish+green)             => #t)
     (check (enum-set-contains? reddish+green color-green) => #t))
 
   (let* ((color-tangerine (enum-name->enum color 'tangerine))
          (reddish* (enum-set-delete! (enum-set-copy reddish)
                                      color-tangerine)))
-    (check (enum-subset? reddish* reddish)              => #t)
+    (check (enum-set<? reddish* reddish)                 => #t)
     (check (enum-set-contains? reddish* color-tangerine) => #f))
 
   (check (enum-set-empty? empty-colors) => #t))
@@ -287,11 +319,19 @@
   (check (enum-set-map->list enum-name color-set)    => color-names)
   (check (enum-set-map->list enum-name empty-colors) => '())
 
+  (check (enum-set-count (lambda (e) (enum=? e color-blue)) color-set)
+   => 1)
+  (check (enum-set-count (lambda (e) (enum=? e color-blue)) reddish)
+   => 0)
+  (check (enum-set-count (lambda (e) (string? (enum-value e)))
+                         (enum-type->enum-set pizza))
+   => (length pizza-descriptions))
+
   ;;; filter & remove
 
-  (check (enum-subset? (enum-set-filter (lambda (e) (enum=? e color-red))
-                                        color-set)
-                       color-set)
+  (check (enum-set<? (enum-set-filter (lambda (e) (enum=? e color-red))
+                                      color-set)
+                     color-set)
    => #t)
   (check (enum-set-map->list (enum-set-filter (lambda (e) (enum=? e color-red))
                                               color-set))
@@ -300,9 +340,9 @@
   (check (enum-set=? (enum-set-filter always color-set) color-set)
    => #t)
   (check (enum-set-empty? (enum-set-filter never color-set)) => #t)
-  (check (enum-subset? (enum-set-remove (lambda (e) (enum=? e color-red))
-                                        color-set)
-                       color-set)
+  (check (enum-set<? (enum-set-remove (lambda (e) (enum=? e color-red))
+                                      color-set)
+                     color-set)
    => #t)
   (check (enum-set-map->list (enum-set-remove (lambda (e) (enum=? e color-red))
                                               color-set))
@@ -353,6 +393,7 @@
   (check-enum-type-accessors)
   (check-enum-operations)
   (check-enum-set-basic)
+  (check-enum-set-predicates)
   (check-enum-set-operations)
   (check-enum-set-logical)
 
