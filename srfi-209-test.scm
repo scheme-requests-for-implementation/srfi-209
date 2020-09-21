@@ -21,6 +21,7 @@
 
 (import (scheme base))
 (import (srfi 1))
+(import (srfi 128))
 (import (srfi 209))
 
 (cond-expand
@@ -114,9 +115,12 @@
     (chicago    "deep-dish")
     (hawaiian   "pineapple and ham")))
 
+(define pizza-names (map car pizza-descriptions))
+
 (define pizza (make-enum-type pizza-descriptions))
 
 (define pizza-chicago (enum-name->enum pizza 'chicago))
+(define pizza-bianca (enum-name->enum pizza 'bianca))
 
 ;;;; Finders and enum accessors
 
@@ -137,9 +141,14 @@
    => "deep-dish")
 
   (check (enum-name->ordinal color 'red)  => 0)
+  (check (enum-name->ordinal color 'blue) => 6)
   (check (enum-name->value pizza 'funghi) => "mushrooms")
+  (check (enum-name->value color 'blue)   => (enum-name->ordinal color 'blue))
   (check (enum-ordinal->name color 0)     => 'red)
-  (check (enum-ordinal->value pizza 1)    => "mushrooms"))
+  (check (enum-ordinal->name pizza 3)     => 'chicago)
+  (check (enum-ordinal->value pizza 1)    => "mushrooms")
+  (check (enum-ordinal->value color 6)    => 6)
+)
 
 ;; Ensure make-enum-type accepts only valid name or name+value arguments.
 (define (check-type-constructor)
@@ -155,13 +164,16 @@
 (define (check-predicates)
   (print-header "Running predicate tests...")
 
-  (check (enum-type? color) => #t)
-  (check (enum-type? 'z)    => #f)
+  ;; Ensure enums aren't just symbols.
   (check (enum? color-red)  => #t)
   (check (enum? 'z)         => #f)
 
-  (check (enum-type-contains? color color-red)     => #t)
-  (check (enum-type-contains? color pizza-chicago) => #f)
+  (check (every (lambda (e) (enum-type-contains? color e))
+                (map (lambda (s) (enum-name->enum color s)) color-names))
+   => #t)
+  (check (any (lambda (e) (enum-type-contains? color e))
+              (map (lambda (s) (enum-name->enum pizza s)) pizza-names))
+   => #f)
 
   (check (enum=? color-red (enum-ordinal->enum color 0)) => #t)
   (check (enum=? color-red color-tangerine)              => #f)
@@ -195,8 +207,11 @@
   (print-header "Running enum-type accessor tests...")
 
   (check (enum-type-size color)       => (length color-names))
+  (check (enum-type-size pizza)        => (length pizza-names))
   (check (enum-name (enum-min color)) => 'red)
+  (check (enum-name (enum-min pizza)) => 'margherita)
   (check (enum-name (enum-max color)) => 'violet)
+  (check (enum-name (enum-max pizza)) => 'hawaiian)
 
   (check (length (enum-type-enums color)) => (enum-type-size color))
   (check (equal? (map enum-name (enum-type-enums color)) color-names)
@@ -204,20 +219,64 @@
   (check (equal? (map enum-ordinal (enum-type-enums color))
                  (iota (enum-type-size color)))
    => #t)
+  (check (equal? (map enum-value (enum-type-enums pizza))
+                 (map cadr pizza-descriptions))
+   => #t)
 
   (check (equal? (enum-type-names color) color-names) => #t)
-  (check (equal? (enum-type-names pizza)
-                 (map car pizza-descriptions))        => #t)
+  (check (equal? (enum-type-names pizza) pizza-names) => #t)
   (check (equal? (enum-type-values pizza)
-                 (map cadr pizza-descriptions))       => #t))
+                 (map cadr pizza-descriptions))       => #t)
+  (check (equal? (enum-type-values color)
+                 (iota (enum-type-size color)))       => #t)
+)
 
 (define (check-enum-operations)
   (print-header "Running enum operation tests...")
 
   (check (enum=? (enum-next color-red) color-tangerine) => #t)
   (check (enum=? (enum-prev color-tangerine) color-red) => #t)
+  (check (enum=? (enum-next pizza-bianca) pizza-chicago) => #t)
+  (check (enum=? (enum-prev pizza-chicago) pizza-bianca) => #t)
   (check (enum-next (enum-max color))                   => #f)
-  (check (enum-prev (enum-min color))                   => #f))
+  (check (enum-prev (enum-min color))                   => #f)
+)
+
+;;;; Enum comparators
+
+(define (check-enum-comparators)
+  (print-header "Running enum comparator tests...")
+
+  (let ((pizza-comparator (make-enum-comparator pizza)))
+    (check (comparator? pizza-comparator)          => #t)
+    (check (comparator-ordered? pizza-comparator)  => #t)
+    (check (comparator-hashable? pizza-comparator) => #t)
+
+    (check (every (lambda (e) (comparator-test-type pizza-comparator e))
+                 (enum-type-enums pizza))
+     => #t)
+    (check (any (lambda (e) (comparator-test-type pizza-comparator e))
+                (enum-type-enums color))
+     => #f)
+
+   (check (=? pizza-comparator
+              pizza-chicago
+              (enum-name->enum pizza 'chicago))
+    => #t)
+   (check (=? pizza-comparator pizza-bianca pizza-chicago)  => #f)
+   (check (<? pizza-comparator pizza-bianca pizza-chicago)  => #t)
+   (check (<? pizza-comparator pizza-bianca pizza-bianca)   => #f)
+   (check (<? pizza-comparator pizza-chicago pizza-bianca)  => #f)
+   (check (>? pizza-comparator pizza-bianca pizza-chicago)  => #f)
+   (check (>? pizza-comparator pizza-bianca pizza-bianca)   => #f)
+   (check (>? pizza-comparator pizza-chicago pizza-bianca)  => #t)
+   (check (<=? pizza-comparator pizza-bianca pizza-chicago) => #t)
+   (check (<=? pizza-comparator pizza-bianca pizza-bianca)  => #t)
+   (check (<=? pizza-comparator pizza-chicago pizza-bianca) => #f)
+   (check (>=? pizza-comparator pizza-bianca pizza-chicago) => #f)
+   (check (>=? pizza-comparator pizza-bianca pizza-bianca)  => #t)
+   (check (>=? pizza-comparator pizza-chicago pizza-bianca) => #t))
+)
 
 (define (check-enum-set-basic)
   (print-header "Running basic enum set tests...")
@@ -230,15 +289,27 @@
                   (enum-type-enums pizza)))
    => #t)
 
-  (check (enum-set-contains? reddish (enum-name->enum color 'red))
+  (check (let ((pizza-set (list->enum-set (enum-type-enums pizza))))
+           (every (lambda (enum)
+                    (enum-set-contains? pizza-set enum))
+                  (enum-type-enums pizza)))
    => #t)
-  (check (enum-set-contains? reddish (enum-name->enum color 'tangerine))
+
+  (check (let ((pizza-set (apply enum-set (enum-type-enums pizza))))
+           (every (lambda (enum) (enum-set-contains? pizza-set enum))
+                  (enum-type-enums pizza)))
    => #t)
-  (check (enum-set-contains? reddish (enum-name->enum color 'blue))
+
+  (check (enum-set-contains? (enum-set color-red color-blue) color-red)
+   => #t)
+  (check (enum-set-contains? (enum-set color-red color-blue)
+                             color-tangerine)
    => #f)
 
   (check (enum-set-empty? empty-colors) => #t)
   (check (enum-set-empty? color-set)    => #f)
+
+  (check (enum-set=? (enum-set-project color reddish) reddish) => #t)
 
   (check (eqv? color-set (enum-set-copy color-set)) => #f)
 )
@@ -291,33 +362,43 @@
 (define (check-enum-set-mutators)
   (print-header "Running enum-set mutator tests...")
 
-  (let* ((color-green (enum-name->enum color 'green))
-         (reddish+green
-          (enum-set-adjoin! (enum-set-copy reddish) color-green)))
+  (let ((reddish+green
+         (enum-set-adjoin! (enum-set-copy reddish) color-green)))
     (check (enum-set<? reddish reddish+green)             => #t)
     (check (enum-set-contains? reddish+green color-green) => #t))
 
-  (let* ((color-tangerine (enum-name->enum color 'tangerine))
-         (reddish* (enum-set-delete! (enum-set-copy reddish)
-                                     color-tangerine)))
+  (let ((reddish* (enum-set-delete! (enum-set-copy reddish)
+                                    color-tangerine)))
     (check (enum-set<? reddish* reddish)                 => #t)
     (check (enum-set-contains? reddish* color-tangerine) => #f))
 
-  (check (enum-set-empty? empty-colors) => #t))
+  (let ((reddish** (enum-set-delete-all! (enum-set-copy reddish)
+                                         (list color-tangerine))))
+    (check (enum-set<? reddish** reddish)                 => #t)
+    (check (enum-set-contains? reddish** color-tangerine) => #f))
+
+  (check (enum-set-empty?
+          (enum-set-delete-all! color-set (enum-type-enums color)))
+   => #t)
+)
 
 (define (check-enum-set-operations)
   (print-header "Running enum-set operations tests...")
 
   (check (enum-set-size color-set) => (length color-names))
+  (check (enum-set-size empty-colors) => 0)
 
   (check (equal? (enum-set->list color-set) (enum-type-enums color)) => #t)
-
+  (check (null? (enum-set->list empty-colors)) => #t)
   (check (= (enum-set-size color-set)
             (length (enum-set->list color-set)))
    => #t)
 
   (check (enum-set-map->list enum-name color-set)    => color-names)
   (check (enum-set-map->list enum-name empty-colors) => '())
+  (check (equal? (enum-set-map->list enum-name color-set)
+                 (map enum-name (enum-set->list color-set)))
+   => #t)
 
   (check (enum-set-count (lambda (e) (enum=? e color-blue)) color-set)
    => 1)
@@ -364,8 +445,7 @@
                         '()
                         color-set)
    => (reverse color-names))
-
-  (check (enum-set=? (enum-set-project color reddish) reddish) => #t))
+)
 
 (define (check-enum-set-logical)
   (print-header "Running enum-set logical operations tests...")
@@ -392,8 +472,10 @@
   (check-predicates)
   (check-enum-type-accessors)
   (check-enum-operations)
+  (check-enum-comparators)
   (check-enum-set-basic)
   (check-enum-set-predicates)
+  (check-enum-set-mutators)
   (check-enum-set-operations)
   (check-enum-set-logical)
 
