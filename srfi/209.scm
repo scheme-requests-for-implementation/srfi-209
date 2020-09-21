@@ -54,7 +54,7 @@
   (map (lambda (elt ord)
          (cond ((and (pair? elt) (= 2 (length elt)) (symbol? (car elt)))
                 (make-enum type (car elt) ord (cadr elt)))
-               ((symbol? elt) (make-enum type elt ord #f))
+               ((symbol? elt) (make-enum type elt ord ord))
                (else (error "make-enum-type: invalid argument" elt))))
        names+vals
        (iota (length names+vals))))
