@@ -87,14 +87,16 @@ otherwise.</p>
 enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> belongs to <em>enum-type</em>, and
 <code>#f</code> otherwise.</p>
-<p><code>(enum=?</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p>Returns <code>#t</code> if all the arguments are the same enum, and
-<code>#f</code> otherwise. It is an error to apply <code>enum=?</code> to enums
+<p><code>(enum=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
+<p>Returns <code>#t</code> if all the arguments are the same enum 
+in the sense of <code>eq?</code> (which is equivalent to
+having the same name and ordinal) and
+<code>#f</code> otherwise. It is an error to apply <code>enum=?</code> to enums 
 belonging to different enum types.</p>
-<p><code>(enum&lt;?</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p><code>(enum&gt;?</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p><code>(enum&lt;=?</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p><code>(enum&gt;=?</code>&nbsp;<em>enum</em> …<code>)</code></p>
+<p><code>(enum&lt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
+<p><code>(enum&gt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
+<p><code>(enum&lt;=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
+<p><code>(enum&gt;=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
 <p>These predicates return <code>#t</code> if their arguments are enums whose
 ordinals are in increasing, decreasing, non-decreasing, and non-increasing
 order respectively, and <code>#f</code> otherwise. It is an error unless all of
@@ -122,7 +124,10 @@ enum’s value is the same as the ordinal.</p>
 <p><code>(enum-value</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the value associated with <em>enum</em>.</p>
 <h3 id="enum-finders">Enum finders</h3>
-<p><code>(enum-name-&gt;enum</code>&nbsp;<em>enum-type
+<p>These procedures use an enum type and one of the properties
+of an enum to find the enum object.
+</p>
+<p><code>(enum-name-&gt;enum</code>&nbsp;<em>enum-type 
 symbol</em><code>)</code></p>
 <p>If there exists an enum belonging to <em>enum-type</em> named
 <em>symbol</em>, return it; otherwise return <code>#f</code>.</p>
@@ -202,7 +207,7 @@ enum-set</em><code>)</code></p>
 that have the same names as the members of <em>enum-set</em>, whose enum type
 typically is not the same as <em>enum-type</em>.</p>
 <p><code>(enum-set-copy</code>&nbsp;<em>enum-set</em><code>)</code></p>
-<p>Returns a copy of <em>enum-set</em><code>)</code>.</p>
+<p>Returns a copy of <em>enum-set</em>.</p>
 <h3 id="enum-set-predicates">Enum set predicates</h3>
 <p><code>(enum-set?</code>&nbsp;<em>obj</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>obj</em> is an enum set and <code>#f</code>
@@ -212,11 +217,35 @@ enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> is a member of <em>enum-set</em>.
 It is an error if <em>enum</em> does not belong to the same enum type as the
 members of <em>enum-set</em>.</p>
-<p><code>(enum-set=?</code>&nbsp;<em>enum-set-1
-enum-set-2</em><code>)</code></p>
-<p>Returns <code>#t</code> if <em>enum-set-1</em> and <em>enum-set-2</em> have
-the same members. It is an error if the members of the enum sets do not belong
+<p><code>(enum-set-empty?</code>&nbsp;<em>enum-set</em><code>)</code></p>
+<p>Returns <code>#t</code> if <em>enum-set</em> is empty,
+and <code>#f</code> otherwise.</p>
+<p><code>(enum-set-disjoint?</code>&nbsp;<em>enum-set<sub>1</sub> enum-set<sub>2</sub></em><code>)</code></p>
+Returns <code>#t</code> if <em>enum-set<sub>1</sub></em> and <em>enum-set<sub>2</sub></em>
+do not have any enum objects in common, and <code>#f</code> otherwise.</p>
+<p><code>(enum-set-contains?</code>&nbsp;<em>enum-set
+enum</em><code>)</code></p>
+<p>Returns <code>#t</code> if <em>enum</em> is a member of <em>enum-set</em>.
+It is an error if <em>enum</em> does not belong to the same enum type as the
+members of <em>enum-set</em>.</p>
+<p>Note that the following three procedures do not obey the trichotomy law,
+and cannot be used to define a comparator.</p>
+<p><code>(enum-set=?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code><br/>
+<code>(enum-set&lt;?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code><br/>
+<code>(enum-set&gt;?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code><br/>
+<code>(enum-set&lt;=?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code><br/>
+<code>(enum-set&gt;=?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code></p>
+<p>Returns <code>#t</code> if the members of <em>enum-set-1</em>
+are the same as / a proper subset of / a proper superset of/
+a subset of / a superset of
+<em>enum-set-2</em>.
+It is an error if the members of the enum sets do not belong
 to the same type.</p>
+<p><code>(enum-set-any?</code>&nbsp;<em>pred enum-set</em><code>)</code><br/>
+<code>(enum-set-every?</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
+<p>Returns <code>#t</code> if any/every application of <em>proc</em>
+to the elements of <em>enum-set</em> returns true,
+and <code>#f</code> otherwise.</p>
 <h3 id="enum-set-mutators">Enum set mutators</h3>
 <p>These procedures are linear-update: that is, they may or may not modify
 their <em>enum-set</em> argument, and any existing references to it are
@@ -229,19 +258,24 @@ to the same enum type.</p>
 <p><code>(enum-set-delete!</code>&nbsp;<em>enum-set enum</em>
 …<code>)</code></p>
 <p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
-the <em>enums</em>. It is an error if the members of the result do not all
-belong to the same enum type.</p>
+the <em>enums</em>.</p>
 <p><code>(enum-set-delete-all!</code>&nbsp;<em>enum-set list</em>
 …<code>)</code></p>
 <p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
-the members of <em>list</em>. It is an error if the members of the result do
-not all belong to the same enum type.</p>
+the members of <em>list</em>.</p>
 <h3 id="enum-set-operations">Enum set operations</h3>
 <p><code>(enum-set-size</code>&nbsp;<em>enum-set</em><code>)</code></p>
 <p>Returns the number of elements in <em>enum-set</em>.</p>
 <p><code>(enum-set-&gt;list</code>&nbsp;<em>enum-set</em><code>)</code></p>
 <p>Returns a list containing the members of <em>enum-set</em>.</p>
-<p><code>(enum-set-collect</code>&nbsp;<em>proc enum-set</em><code>)</code></p>
+<p><code>(enum-set-count</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
+<p>Returns an exact integer, the number of elements of <em>enum-set</em>
+that satisfy <em>pred</em>.</p>
+<p><code>(enum-set-filter</code>&nbsp;<em>pred enum-set</em><code>)</code><br/>
+<code>(enum-set-remove</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
+<p>Returns an enum-set containing the enums in <em>enum-set</em>
+that satisfy / do not satisfy <em>pred</em>.</p>
+<p><code>(enum-set-map->list</code>&nbsp;<em>proc enum-set</em><code>)</code></p>
 <p>Invokes <em>proc</em> on each member of <em>enum-set</em> in increasing
 ordinal order. The results are made into a list and returned.</p>
 <p><code>(enum-set-for-each</code>&nbsp;<em>proc enum-set</em><code>)</code></p>
