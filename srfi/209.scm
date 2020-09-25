@@ -54,7 +54,7 @@
   (map (lambda (elt ord)
          (cond ((and (pair? elt) (= 2 (length elt)) (symbol? (car elt)))
                 (make-enum type (car elt) ord (cadr elt)))
-               ((symbol? elt) (make-enum type elt ord #f))
+               ((symbol? elt) (make-enum type elt ord ord))
                (else (error "make-enum-type: invalid argument" elt))))
        names+vals
        (iota (length names+vals))))
@@ -74,11 +74,6 @@
                   cdr
                   enums
                   symbol-comparator))
-
-;; Check the type of a single enum.
-;; If any enum in enums is not an element of type, raise an error.
-(define (%well-typed-enums type enums)
-  (every (lambda (enum) (enum-type-contains? type enum)) enums))
 
 (define (%enum-type=? etype1 etype2)
   (eqv? etype1 etype2))
@@ -101,21 +96,39 @@
   (assume (enum? enum))
   ((comparator-type-test-predicate (enum-type-comparator type)) enum))
 
-(define (%compare-enums enums compare)
-  (or (null? enums)
-      (let ((type (enum-type (car enums))))
-        (assume (%well-typed-enums type enums))
-        (apply compare (enum-type-comparator type) enums))))
+(define (%enum-type-contains?/no-check type enum)
+  ((comparator-type-test-predicate (enum-type-comparator type)) enum))
 
-(define (enum=? . enums) (%compare-enums enums =?))
+(define (%well-typed-enum? type obj)
+  (and (enum? obj) (%enum-type-contains?/no-check type obj)))
 
-(define (enum<? . enums) (%compare-enums enums <?))
+(define (%compare-enums compare enums)
+  (assume (and (pair? enums) (pair? (cdr enums)))
+          "Invalid number of arguments")
+  (assume (enum? (car enums)))
+  (let ((type (enum-type (car enums))))
+    (assume (every (lambda (e) (%well-typed-enum? type e)) (cdr enums))
+            "All enums must be of the same enum type")
+    (apply compare (enum-type-comparator type) enums)))
 
-(define (enum>? . enums) (%compare-enums enums >?))
+(define (enum=? enum0 enum1 . enums)
+  (assume (enum? enum0))
+  (let ((type (enum-type enum0)))
+    (assume (%well-typed-enum? type enum1))
+    (and (eq? enum0 enum1)
+         (or (null? enums)
+             (every (lambda (e)
+                      (assume (%well-typed-enum? type e))
+                      (eq? enum0 e))
+                    enums)))))
 
-(define (enum<=? . enums) (%compare-enums enums <=?))
+(define (enum<? . enums) (%compare-enums <? enums))
 
-(define (enum>=? . enums) (%compare-enums enums >=?))
+(define (enum>? . enums) (%compare-enums >? enums))
+
+(define (enum<=? . enums) (%compare-enums <=? enums))
+
+(define (enum>=? . enums) (%compare-enums >=? enums))
 
 ;;;; Enum finders
 
@@ -156,7 +169,7 @@
   (assume (exact-natural? ordinal))
   (%enum-project type enum-ordinal->enum ordinal enum-value))
 
-;;;; Enumeration type accessors
+;;;; Enum type accessors
 
 (define (enum-type-size type)
   (assume (enum-type? type))
@@ -259,26 +272,59 @@
 (define (%enum-set-type=? eset1 eset2)
   (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
 
-(define (enum-set=? eset1 eset2)
+(define (enum-set-empty? eset)
+  (assume (enum-set? eset))
+  (mapping-empty? (enum-set-mapping eset)))
+
+(define (enum-set-disjoint? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (assume (%enum-set-type=? eset1 eset2)
-          "enum-set=?: enum sets have different types")
-  (mapping=? (enum-type-comparator (enum-set-type eset1))
-             (enum-set-mapping eset1)
-             (enum-set-mapping eset2)))
+  (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (mapping-disjoint? (enum-set-mapping eset1) (enum-set-mapping eset2)))
+
+(define (%compare-enum-sets compare eset1 eset2)
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
+  (compare (enum-type-comparator (enum-set-type eset1))
+           (enum-set-mapping eset1)
+           (enum-set-mapping eset2)))
+
+(define (enum-set=? eset1 eset2)
+  (%compare-enum-sets mapping=? eset1 eset2))
+
+(define (enum-set<? eset1 eset2)
+  (%compare-enum-sets mapping<? eset1 eset2))
+
+(define (enum-set>? eset1 eset2)
+  (%compare-enum-sets mapping>? eset1 eset2))
+
+(define (enum-set<=? eset1 eset2)
+  (%compare-enum-sets mapping<=? eset1 eset2))
+
+(define (enum-set>=? eset1 eset2)
+  (%compare-enum-sets mapping>=? eset1 eset2))
+
+(define (enum-set-any? pred eset)
+  (assume (enum-set? eset))
+  (mapping-any? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
+
+(define (enum-set-every? pred eset)
+  (assume (enum-set? eset))
+  (mapping-every? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
 
 ;;;; Enum set mutators
 
 (define (enum-set-adjoin! eset . enums)
   (assume (enum-set? eset))
-  (assume (%well-typed-enums (enum-set-type eset) enums))
-  (make-enum-set
-   (enum-set-type eset)
-   (fold (lambda (enum mapping)
-           (mapping-adjoin! mapping (enum-ordinal enum) enum))
-         (enum-set-mapping eset)
-         enums)))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (fold (lambda (enum mapping)
+             (assume (%enum-type-contains?/no-check type enum))
+             (mapping-adjoin! mapping (enum-ordinal enum) enum))
+           (enum-set-mapping eset)
+           enums))))
 
 (define (enum-set-delete! eset . enums)
   (assume (enum-set? eset))
@@ -286,7 +332,6 @@
 
 (define (enum-set-delete-all! eset enum-lis)
   (assume (enum-set? eset))
-  (assume (%well-typed-enums (enum-set-type eset) enum-lis))
   (make-enum-set
    (enum-set-type eset)
    (mapping-delete-all! (enum-set-mapping eset)
@@ -302,11 +347,28 @@
   (assume (enum-set? eset))
   (mapping-values (enum-set-mapping eset)))
 
-(define (enum-set-collect proc eset)
+(define (enum-set-map->list proc eset)
   (assume (procedure? proc))
   (assume (enum-set? eset))
   (mapping-map->list (lambda (_ enum) (proc enum))
                      (enum-set-mapping eset)))
+
+(define (enum-set-count pred eset)
+  (assume (enum-set? eset))
+  (mapping-count (lambda (_ enum) (pred enum))
+                 (enum-set-mapping eset)))
+
+(define (enum-set-filter pred eset)
+  (assume (enum-set? eset))
+  (make-enum-set (enum-set-type eset)
+                 (mapping-filter (lambda (_ enum) (pred enum))
+                                 (enum-set-mapping eset))))
+
+(define (enum-set-remove pred eset)
+  (assume (enum-set? eset))
+  (make-enum-set (enum-set-type eset)
+                 (mapping-remove (lambda (_ enum) (pred enum))
+                                 (enum-set-mapping eset))))
 
 (define (enum-set-for-each proc eset)
   (assume (procedure? proc))
@@ -314,7 +376,6 @@
   (mapping-for-each (lambda (_ enum) (proc enum))
                     (enum-set-mapping eset)))
 
-;; FIXME: Order of proc's arguments?
 (define (enum-set-fold proc nil eset)
   (assume (procedure? proc))
   (assume (enum-set? eset))
@@ -328,8 +389,7 @@
 (define (%enum-set-logical-op! proc eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (assume (%enum-set-type=? eset1 eset2)
-          "enum sets have different types")
+  (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
   (make-enum-set
    (enum-set-type eset1)
    (proc (enum-set-mapping eset1) (enum-set-mapping eset2))))
