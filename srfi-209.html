@@ -88,10 +88,10 @@ enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> belongs to <em>enum-type</em>, and
 <code>#f</code> otherwise.</p>
 <p><code>(enum=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
-<p>Returns <code>#t</code> if all the arguments are the same enum 
+<p>Returns <code>#t</code> if all the arguments are the same enum
 in the sense of <code>eq?</code> (which is equivalent to
 having the same name and ordinal) and
-<code>#f</code> otherwise. It is an error to apply <code>enum=?</code> to enums 
+<code>#f</code> otherwise. It is an error to apply <code>enum=?</code> to enums
 belonging to different enum types.</p>
 <p><code>(enum&lt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
 <p><code>(enum&gt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
@@ -127,7 +127,7 @@ enum’s value is the same as the ordinal.</p>
 <p>These procedures use an enum type and one of the properties
 of an enum to find the enum object.
 </p>
-<p><code>(enum-name-&gt;enum</code>&nbsp;<em>enum-type 
+<p><code>(enum-name-&gt;enum</code>&nbsp;<em>enum-type
 symbol</em><code>)</code></p>
 <p>If there exists an enum belonging to <em>enum-type</em> named
 <em>symbol</em>, return it; otherwise return <code>#f</code>.</p>
