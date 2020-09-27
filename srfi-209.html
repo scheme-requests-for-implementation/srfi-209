@@ -5,6 +5,7 @@
     <title>SRFI 209: Enumerations and Enumeration Sets</title>
     <link href="/favicon.png" rel="icon" sizes="192x192" type="image/png">
     <link rel="stylesheet" href="https://srfi.schemers.org/srfi.css" type="text/css">
+    <style>pre.example { margin-left: 2em; }</style>
     <meta name="viewport" content="width=device-width, initial-scale=1"></head>
   <body>
     <h1><a href="https://srfi.schemers.org/"><img class="srfi-logo"
@@ -88,12 +89,22 @@ otherwise.</p>
 enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> belongs to <em>enum-type</em>, and
 <code>#f</code> otherwise.</p>
+<pre class="example"><code>(enum-type-contains? color (enum-name-&gt;enum color 'red)) &rArr; #t
+
+(enum-type-contains? pizza (enum-name->enum color 'red)) &rArr; #f
+</code></pre>
 <p><code>(enum=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
 <p>Returns <code>#t</code> if all the arguments are the same enum
 in the sense of <code>eq?</code> (which is equivalent to
 having the same name and ordinal) and
 <code>#f</code> otherwise. It is an error to apply <code>enum=?</code> to enums
 belonging to different enum types.</p>
+<pre class="example"><code>(enum=? color-red color-blue) &rArr; #f
+
+(enum=? pizza-funghi (enum-name->enum pizza 'funghi)) &rArr; #t
+
+(enum=? color-red (enum-name-&gt;enum color 'red) color-blue) &rArr; #f
+</code></pre>
 <p><code>(enum&lt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
 <p><code>(enum&gt;?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
 <p><code>(enum&lt;=?</code>&nbsp;<em>enum<sub>0</sub> enum<sub>1</sub> enum</em> …<code>)</code></p>
@@ -102,6 +113,16 @@ belonging to different enum types.</p>
 ordinals are in increasing, decreasing, non-decreasing, and non-increasing
 order respectively, and <code>#f</code> otherwise. It is an error unless all of
 the arguments belong to the same enum type.</p>
+<pre class="example"><code>(enum&lt;? (enum-ordinal-&gt;enum color 0) (enum-ordinal-&gt;enum color 1))
+ &rArr; #t
+
+(enum&gt;? (enum-ordinal-&gt;enum color 2) (enum-ordinal-&gt;enum color 1)) &rArr; #t
+
+(enum&gt;=? (enum-ordinal-&gt;enum color 2)
+         (enum-ordinal-&gt;enum color 1)
+         (enum-ordinal-&gt;enum color 1))
+ &rArr; #t
+</code></pre>
 <h3 id="enum-type-constructor">Enum type constructor</h3>
 <p><code>(make-enum-type</code>&nbsp;<em>list</em><code>)</code></p>
 <p>Returns a newly allocated enum type containing a fixed set of newly
@@ -115,15 +136,38 @@ within an enum type. The position of the element in <em>list</em> is the
 ordinal of the corresponding enum, so ordinals within an enum type are also
 distinct. If a value is given, it becomes the value of the enum; otherwise the
 enum’s value is the same as the ordinal.</p>
+<p>The following example enum types will be used in examples throughout
+this SRFI, with the identifier <em>type</em>-<em>name</em> referring to
+the enum of type <em>type</em> with name <em>name</em>.</p>
+<pre class="example"><code> ;; Names only (values default to ordinals).
+(define color
+  (make-enum-type '(red orange yellow green cyan blue violet)))
+
+;; Names and values.
+(define pizza
+  (make-enum-type '((margherita "tomato and mozzarella")
+                    (funghi "mushrooms")
+                    (chicago "deep-dish")
+                    (hawaiian "pineapple and ham"))))
+</code></pre>
 <h3 id="enum-accessors">Enum accessors</h3>
 <p><code>(enum-type</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the enum type to which <em>enum</em> belongs.</p>
+<pre class="example"><code>(eqv? color (enum-type color-red)) &rArr; #t
+</code></pre>
 <p><code>(enum-name</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the name (symbol) associated with <em>enum</em>.</p>
+<pre class="example"><code>(enum-name color-red) &rArr; red
+</code></pre>
 <p><code>(enum-ordinal</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the ordinal (exact integer) associated with <em>enum</em>.</p>
+<pre class="example"><code>(enum-ordinal pizza-chicago) &rArr; 2
+</code></pre>
 <p><code>(enum-value</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the value associated with <em>enum</em>.</p>
+<pre class="example"><code>(enum-value pizza-chicago) &rArr; "deep-dish"
+(enum-value color-blue) &rArr; 5  ; value defaults to ordinal
+</code></pre>
 <h3 id="enum-finders">Enum finders</h3>
 <p>These procedures use an enum type and one of the properties
 of an enum to find the enum object.
@@ -132,10 +176,16 @@ of an enum to find the enum object.
 symbol</em><code>)</code></p>
 <p>If there exists an enum belonging to <em>enum-type</em> named
 <em>symbol</em>, return it; otherwise return <code>#f</code>.</p>
+<pre class="example"><code>(enum-name (enum-name-&gt;enum color 'green)) &rArr; green
+(enum-name-&gt;enum color 'mushroom) &rArr; #f
+</code></pre>
 <p><code>(enum-ordinal-&gt;enum</code>&nbsp;<em>enum-type
 exact-integer</em><code>)</code></p>
 <p>If there exists an enum belonging to <em>enum-type</em> whose ordinal is
 <em>exact-integer</em>, return it; otherwise return <code>#f</code>.</p>
+<pre class="example"><code>(enum-name (enum-ordinal-&gt;enum color 3)) &rArr; green
+(enum-ordinal-&gt;enum color 10) &rArr; #f
+</code></pre>
 <p>Note: There is no way to find an enum by its value, since values need not be
 unique.</p>
 <p>The following convenience procedures provide enum-finding followed by access
@@ -144,36 +194,63 @@ to a property.</p>
 symbol</em><code>)</code></p>
 <p>Return the ordinal of the enum belonging to <em>enum-type</em> whose name is
 <em>symbol</em>. It is an error if there is no such enum.</p>
+<pre class="example"><code>(enum-name-&gt;ordinal color 'blue) &rArr; 5
+</code></pre>
 <p><code>(enum-name-&gt;value</code>&nbsp;<em>enum-set
 symbol</em><code>)</code></p>
 <p>Return the value of the enum belonging to <em>enum-type</em> whose name is
 <em>symbol</em>. It is an error if there is no such enum.</p>
+<pre class="example"><code>(enum-name-&gt;value pizza 'funghi) &rArr; "mushrooms"
+(enum-name-&gt;value color 'blue) &rArr; 5
+</code></pre>
 <p><code>(enum-ordinal-&gt;name</code>&nbsp;<em>enum-set
 exact-integer</em><code>)</code></p>
 <p>Return the name of the enum belonging to <em>enum-type</em> whose ordinal is
 <em>exact-integer</em>. It is an error if there is no such enum.</p>
+<pre class="example"><code>(enum-ordinal-&gt;name color 0) &rArr; red
+(enum-ordinal-&gt;name pizza 3) &rArr; hawaiian
+</code></pre>
 <p><code>(enum-ordinal-&gt;value</code>&nbsp;<em>enum-set
 exact-integer</em><code>)</code></p>
 <p>Return the value of the enum belonging to <em>enum-type</em> whose ordinal
 is <em>exact-integer</em>. It is an error if there is no such enum.</p>
+<pre class="example"><code>(enum-ordinal-&gt;value pizza 1) &rArr; "mushrooms"
+</code></pre>
 <h3 id="enumeration-types">Enumeration types</h3>
 <p><code>(enum-type-size</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns an exact integer equal to the number of enums in
 <em>enum-type</em>.</p>
+<pre class="example"><code>(enum-type-size color) = (length (enum-type-enums colors))
+</code></pre>
 <p><code>(enum-min</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns the enum belonging to <em>enum-type</em> whose ordinal is 0.</p>
+<pre class="example"><code>(enum-name (enum-min color)) &rArr; red
+(enum-name (enum-min pizza)) &rArr; margherita
+</code></pre>
 <p><code>(enum-max</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns the enum belonging to <em>enum-type</em> whose ordinal is equal to
 the number of enums in the enum type minus 1.</p>
+<pre class="example"><code>(enum-name (enum-max color)) &rArr; violet
+(enum-name (enum-max pizza)) &rArr; hawaiian
+</code></pre>
 <p><code>(enum-type-enums</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns a list of the enums belonging to <em>enum-type</em> ordered by
 increasing ordinal.</p>
+<pre class="example"><code>(map enum-name (enum-type-enums pizza)) &rArr;
+  (margherita funghi chicago hawaiian)
+</code></pre>
 <p><code>(enum-type-names</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns a list of the names of the enums belonging to <em>enum-type</em>
 ordered by increasing ordinal.</p>
+<pre class="example"><code>(enum-type-names color)
+ &rArr; (red orange yellow green cyan blue violet)
+</code></pre>
 <p><code>(enum-type-values</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns a list of the values of the enums belonging to <em>enum-type</em>
 ordered by increasing ordinal.</p>
+<pre class="example"><code>(enum-type-values pizza)
+ &rArr; ("tomato and mozzarella" "mushrooms" "deep-dish" "pineapple and ham")
+</code></pre>
 <h3 id="enum-objects">Enum objects</h3>
 <p><code>(enum-next</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the enum that belongs to the same enum-type as <em>enum</em> and has
