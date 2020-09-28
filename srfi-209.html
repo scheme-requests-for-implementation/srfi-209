@@ -256,29 +256,67 @@ ordered by increasing ordinal.</p>
 <p>Returns the enum that belongs to the same enum-type as <em>enum</em> and has
 an ordinal one greater than <em>enum</em>. Returns <code>#f</code> if there is
 no such enum.</p>
+<pre class="example"><code>(enum-name (enum-next color-red)) &rArr; orange
+(enum-next (enum-max color)) &rArr; #f
+</code></pre>
 <p><code>(enum-prev</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the enum that belongs to the same enum-type as <em>enum</em> and has
 an ordinal one less than <em>enum</em>. Returns <code>#f</code> if there is no
 such enum.</p>
+<pre class="example"><code>(enum-name (enum-prev color-orange)) &rArr; red
+(enum-prev (enum-min color)) &rArr; #f
+</code></pre>
 <h3 id="comparators">Comparators</h3>
 <p><code>(make-enum-comparator</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns a <a href="https://srfi.schemers.org/srfi-128/srfi-128.html">SRFI
 128</a> comparator suitable for comparing enums that belong to
 <em>enum-type</em>. The comparator contains both an ordering predicate and a
 hash function, and orders enums based on their ordinal values.</p>
+<pre class="example"><code>(define pizza-comparator (make-enum-comparator pizza))
+
+(comparator-hashable? pizza-comparator) &rArr; #t
+
+(comparator-test-type pizza-comparator pizza-funghi) &rArr; #t
+
+(&lt;? pizza-comparator pizza-margherita pizza-chicago) &rArr; #t
+</code></pre>
 <h3 id="enum-set-constructors">Enum set constructors</h3>
 <p><code>(enum-type-&gt;enum-set</code>&nbsp;<em>enum-type</em><code>)</code></p
 >
 <p>Returns an enum set containing all the enums that belong to
 <em>enum-type</em>.</p>
+<pre class="example"><code>(define color-set (enum-type-&gt;enum-set color))
+
+(define pizza-set (enum-type-&gt;enum-set pizza))
+
+(every (lambda (enum)
+         (enum-set-contains? pizza-set enum))
+       (enum-type-enums pizza))
+ &rArr; #t
+
+(enum-set-map-&gt;list enum-name color-set)
+ &rArr; (red orange yellow green cyan blue violet)
+</code></pre>
 <p><code>(enum-set</code>&nbsp;<em>enum</em> …<code>)</code></p>
 <p>Returns an enum-set containing the <em>enums</em>. It is an error unless all
 of them belong to the same enum type.</p>
+<pre class="example"><code>(enum-set-contains? (enum-set color-red color-blue) color-red)
+ &rArr; #t
+(enum-set-contains? (enum-set color-red color-blue) color-orange)
+ &rArr; #f
+</code></pre>
 <p><code>(list-&gt;enum-set</code>&nbsp;<em>list</em><code>)</code></p>
 <p>Returns an enum-set containing the members of <em>list</em>. It is an error
 unless all the members are enums belonging to the same enum type. It is also an
 error if <em>list</em> is empty, since the relevant enum type cannot be
 determined.</p>
+<pre class="example"><code>(list-&gt;enum-set (enum-type-enums pizza))
+ = (enum-type-&gt;enum-set pizza)
+
+(enum-set-contains? (list-&gt;enum-set (list pizza-funghi pizza-chicago))
+                    pizza-funghi)
+ &rArr; #t
+</code></pre>
 <p><code>(enum-set-project</code>&nbsp;<em>enum-type
 enum-set</em><code>)</code></p>
 <p>Returns an enum set containing the enums belonging to <em>enum-type</em>
@@ -295,12 +333,32 @@ enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> is a member of <em>enum-set</em>.
 It is an error if <em>enum</em> does not belong to the same enum type as the
 members of <em>enum-set</em>.</p>
+<pre class="example"><code>(enum-set-contains? color-set color-blue) &rArr; #t
+(enum-set-contains? (enum-set-delete! color-set color-blue) color-blue) &rArr; #f
+</code></pre>
 <p><code>(enum-set-empty?</code>&nbsp;<em>enum-set</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum-set</em> is empty,
 and <code>#f</code> otherwise.</p>
+<pre class="example"><code>(enum-set-empty? color-set) &rArr; #f
+(enum-set-empty? (enum-set-delete-all! color-set (enum-set->list color-set)))
+ &rArr; #t
+</code></pre>
 <p><code>(enum-set-disjoint?</code>&nbsp;<em>enum-set<sub>1</sub> enum-set<sub>2</sub></em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum-set<sub>1</sub></em> and <em>enum-set<sub>2</sub></em>
 do not have any enum objects in common, and <code>#f</code> otherwise.</p>
+<pre class="example"><code>(define reddish
+  (list-&gt;enum-set (map (lambda (name)
+                         (enum-name-&gt;enum color name))
+                       '(red orange))))
+
+(define ~reddish
+  (list-&gt;enum-set (map (lambda (name)
+                         (enum-name-&gt;enum color name))
+                       '(yellow green cyan blue violet))))
+
+(enum-set-disjoint? color-set reddish) &rArr; #f
+(enum-set-disjoint? reddish ~reddish) &rArr; #t
+</code></pre>
 <p><code>(enum-set-contains?</code>&nbsp;<em>enum-set
 enum</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum</em> is a member of <em>enum-set</em>.
@@ -319,11 +377,31 @@ a subset of / a superset of
 <em>enum-set-2</em>.
 It is an error if the members of the enum sets do not belong
 to the same type.</p>
+<pre class="example"><code>(enum-set=? color-set (enum-set-copy color-set)) &rArr; #t
+(enum-set=? color-set reddish) &rArr; #f
+(enum-set&lt;? reddish color-set) &rArr; #t
+(enum-set&gt;? reddish color-set) &rArr; #f
+(enum-set&lt;=? reddish color-set) &rArr; #t
+(enum-set&gt;=? reddish color-set) &rArr; #f
+</code></pre>
 <p><code>(enum-set-any?</code>&nbsp;<em>pred enum-set</em><code>)</code><br/>
 <code>(enum-set-every?</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
 <p>Returns <code>#t</code> if any/every application of <em>proc</em>
 to the elements of <em>enum-set</em> returns true,
 and <code>#f</code> otherwise.</p>
+<pre class="example"><code>(enum-set-any? (lambda (e) (eqv? 'green (enum-name e)))
+               color-set)
+ &rArr; #t
+(enum-set-any? (lambda (e) (eqv? 'green (enum-name e)))
+               reddish)
+ &rArr; #f
+(enum-set-every? (lambda (e) (eq? 'green (enum-name e)))
+                 color-set)
+ &rArr; #f
+(enum-set-every? (lambda (e) (string? (enum-value e)))
+                 pizza-set)
+ &rArr; #t
+</code></pre>
 <h3 id="enum-set-mutators">Enum set mutators</h3>
 <p>These procedures are linear-update: that is, they may or may not modify
 their <em>enum-set</em> argument, and any existing references to it are
