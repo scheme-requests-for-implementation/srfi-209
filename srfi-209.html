@@ -139,11 +139,10 @@ enum’s value is the same as the ordinal.</p>
 <p>The following example enum types will be used in examples throughout
 this SRFI, with the identifier <em>type</em>-<em>name</em> referring to
 the enum of type <em>type</em> with name <em>name</em>.</p>
-<pre class="example"><code> ;; Names only (values default to ordinals).
+<pre class="example"><code>
 (define color
   (make-enum-type '(red orange yellow green cyan blue violet)))
 
-;; Names and values.
 (define pizza
   (make-enum-type '((margherita "tomato and mozzarella")
                     (funghi "mushrooms")
