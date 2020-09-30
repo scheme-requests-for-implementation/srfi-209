@@ -110,16 +110,19 @@
             "All enums must be of the same enum type")
     (apply compare (enum-type-comparator type) enums)))
 
-(define (enum=? enum0 enum1 . enums)
-  (assume (enum? enum0))
-  (let ((type (enum-type enum0)))
-    (assume (%well-typed-enum? type enum1))
-    (and (eq? enum0 enum1)
-         (or (null? enums)
-             (every (lambda (e)
-                      (assume (%well-typed-enum? type e))
-                      (eq? enum0 e))
-                    enums)))))
+;; enum=? will probably see the most use out of the various enum
+;; comparisons, so we provide a two-argument fast path.
+(define (enum=? enum1 enum2 . enums)
+  (assume (enum? enum1))
+  (let* ((type (enum-type enum1))
+         (comp (enum-type-comparator type)))
+    (cond ((null? enums)                            ; fast path
+           (assume (%well-typed-enum? type enum2))
+           ((comparator-equality-predicate comp) enum1 enum2))
+          (else                                     ; variadic path
+           (assume (every (lambda (e) (%well-typed-enum? type e)) enums)
+                   "Arguments must be of the same enum type")
+           (apply =? comp enum1 enum2 enums)))))
 
 (define (enum<? . enums) (%compare-enums <? enums))
 
