@@ -449,10 +449,9 @@ that satisfy / do not satisfy <em>pred</em>.</p>
 <p><code>(enum-set-map->list</code>&nbsp;<em>proc enum-set</em><code>)</code></p>
 <p>Invokes <em>proc</em> on each member of <em>enum-set</em> in increasing
 ordinal order. The results are made into a list and returned.</p>
-<pre class="example"><code>(enum-set-map-&gt;list
-        enum-name
-        (enum-set-filter (lambda (e) (&gt; (enum-ordinal e) 3))
-                         color-set))
+<pre class="example"><code>(enum-set-map-&gt;list enum-name
+                    (enum-set-filter (lambda (e) (&gt; (enum-ordinal e) 3))
+                                     color-set))
  &rArr; '(cyan blue violet)
 </code></pre>
 <p><code>(enum-set-for-each</code>&nbsp;<em>proc enum-set</em><code>)</code></p>
