@@ -81,9 +81,8 @@
 (define (make-enum-comparator type)
   (make-comparator
    (lambda (obj)
-     (and (enum? obj) (eqv? (enum-type obj) type)))
-   (lambda (enum1 enum2)
-     (eqv? (enum-name enum1) (enum-name enum2)))
+     (and (enum? obj) (eq? (enum-type obj) type)))
+   eq?
    (lambda (enum1 enum2)
      (< (enum-ordinal enum1) (enum-ordinal enum2)))
    (lambda (enum)
