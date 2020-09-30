@@ -151,21 +151,12 @@ the enum of type <em>type</em> with name <em>name</em>.</p>
 <h3 id="enum-accessors">Enum accessors</h3>
 <p><code>(enum-type</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the enum type to which <em>enum</em> belongs.</p>
-<pre class="example"><code>(eqv? color (enum-type color-red)) &rArr; #t
-</code></pre>
 <p><code>(enum-name</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the name (symbol) associated with <em>enum</em>.</p>
-<pre class="example"><code>(enum-name color-red) &rArr; red
-</code></pre>
 <p><code>(enum-ordinal</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the ordinal (exact integer) associated with <em>enum</em>.</p>
-<pre class="example"><code>(enum-ordinal pizza-chicago) &rArr; 2
-</code></pre>
 <p><code>(enum-value</code>&nbsp;<em>enum</em><code>)</code></p>
 <p>Returns the value associated with <em>enum</em>.</p>
-<pre class="example"><code>(enum-value pizza-chicago) &rArr; "deep-dish"
-(enum-value color-blue) &rArr; 5  ; value defaults to ordinal
-</code></pre>
 <h3 id="enum-finders">Enum finders</h3>
 <p>These procedures use an enum type and one of the properties
 of an enum to find the enum object.
@@ -218,8 +209,6 @@ is <em>exact-integer</em>. It is an error if there is no such enum.</p>
 <p><code>(enum-type-size</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns an exact integer equal to the number of enums in
 <em>enum-type</em>.</p>
-<pre class="example"><code>(enum-type-size color) = (length (enum-type-enums colors))
-</code></pre>
 <p><code>(enum-min</code>&nbsp;<em>enum-type</em><code>)</code></p>
 <p>Returns the enum belonging to <em>enum-type</em> whose ordinal is 0.</p>
 <pre class="example"><code>(enum-name (enum-min color)) &rArr; red
