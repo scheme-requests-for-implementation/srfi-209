@@ -23,7 +23,7 @@
 ;;;; Utility
 
 (define (exact-natural? obj)
-  (and (integer? obj) (exact? obj) (not (negative? obj))))
+  (and (exact-integer? obj) (not (negative? obj))))
 
 ;;;; Types
 
