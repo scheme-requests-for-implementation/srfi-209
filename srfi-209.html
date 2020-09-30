@@ -453,7 +453,7 @@ ordinal order. The results are made into a list and returned.</p>
         enum-name
         (enum-set-filter (lambda (e) (&gt; (enum-ordinal e) 3))
                          color-set))
- &rArr; '(cyan blue violet
+ &rArr; '(cyan blue violet)
 </code></pre>
 <p><code>(enum-set-for-each</code>&nbsp;<em>proc enum-set</em><code>)</code></p>
 <p>Invokes <em>proc</em> on each member of <em>enum-set</em> in increasing
@@ -473,7 +473,7 @@ the current state, setting the current state to the result. The algorithm is
 repeated until all the elements of <em>enum-set</em> have been processed. Then
 the current state is returned.</p>
 <pre class="example"><code>(enum-set-fold cons '() color-set)
- &rArr; (reverse (enum-set-&gt;list color-set
+ = (reverse (enum-set-&gt;list color-set))
 </code></pre>
 <h3 id="enum-set-logical-operations">Enum set logical operations</h3>
 <p><code>(enum-set-union!</code>&nbsp;<em>enum-set-1
