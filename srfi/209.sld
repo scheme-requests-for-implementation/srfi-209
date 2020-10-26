@@ -2,7 +2,7 @@
   (import (scheme base)
           (srfi 1)
           (srfi 128)
-          (srfi 146 hash)
+          (srfi 146)
           (srfi 146))
 
   (cond-expand
