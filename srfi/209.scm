@@ -23,7 +23,7 @@
 ;;;; Utility
 
 (define (exact-natural? obj)
-  (and (integer? obj) (exact? obj) (not (negative? obj))))
+  (and (exact-integer? obj) (not (negative? obj))))
 
 ;;;; Types
 
@@ -68,7 +68,7 @@
                    symbol-hash))
 
 (define (make-name-table enums)
-  (hashmap-unfold null?
+  (mapping-unfold null?
                   (lambda (enums)
                     (values (enum-name (car enums)) (car enums)))
                   cdr
@@ -81,9 +81,8 @@
 (define (make-enum-comparator type)
   (make-comparator
    (lambda (obj)
-     (and (enum? obj) (eqv? (enum-type obj) type)))
-   (lambda (enum1 enum2)
-     (eqv? (enum-name enum1) (enum-name enum2)))
+     (and (enum? obj) (eq? (enum-type obj) type)))
+   eq?
    (lambda (enum1 enum2)
      (< (enum-ordinal enum1) (enum-ordinal enum2)))
    (lambda (enum)
@@ -111,16 +110,19 @@
             "All enums must be of the same enum type")
     (apply compare (enum-type-comparator type) enums)))
 
-(define (enum=? enum0 enum1 . enums)
-  (assume (enum? enum0))
-  (let ((type (enum-type enum0)))
-    (assume (%well-typed-enum? type enum1))
-    (and (eq? enum0 enum1)
-         (or (null? enums)
-             (every (lambda (e)
-                      (assume (%well-typed-enum? type e))
-                      (eq? enum0 e))
-                    enums)))))
+;; enum=? will probably see the most use out of the various enum
+;; comparisons, so we provide a two-argument fast path.
+(define (enum=? enum1 enum2 . enums)
+  (assume (enum? enum1))
+  (let* ((type (enum-type enum1))
+         (comp (enum-type-comparator type)))
+    (cond ((null? enums)                            ; fast path
+           (assume (%well-typed-enum? type enum2))
+           ((comparator-equality-predicate comp) enum1 enum2))
+          (else                                     ; variadic path
+           (assume (every (lambda (e) (%well-typed-enum? type e)) enums)
+                   "Arguments must be of the same enum type")
+           (apply =? comp enum1 enum2 enums)))))
 
 (define (enum<? . enums) (%compare-enums <? enums))
 
@@ -137,7 +139,7 @@
 (define (enum-name->enum type name)
   (assume (enum-type? type))
   (assume (symbol? name))
-  (hashmap-ref/default (enum-type-name-table type) name #f))
+  (mapping-ref/default (enum-type-name-table type) name #f))
 
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))

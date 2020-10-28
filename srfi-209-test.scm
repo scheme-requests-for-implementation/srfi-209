@@ -20,6 +20,7 @@
 ;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (import (scheme base)
+        (scheme write)
         (srfi 1)
         (srfi 128)
         (srfi 209))
@@ -414,10 +415,10 @@
                                       color-set)
                      color-set)
    => #t)
-  (check (enum-set-map->list (enum-set-filter (lambda (e) (enum=? e color-red))
+  (check (enum-set-map->list enum-name
+                             (enum-set-filter (lambda (e) (enum=? e color-red))
                                               color-set))
-         (filter (lambda (s) (eq? s 'red)) color-names)
-   => #t)
+   => (filter (lambda (s) (eq? s 'red)) color-names))
   (check (enum-set=? (enum-set-filter always color-set) color-set)
    => #t)
   (check (enum-set-empty? (enum-set-filter never color-set)) => #t)
@@ -425,10 +426,10 @@
                                       color-set)
                      color-set)
    => #t)
-  (check (enum-set-map->list (enum-set-remove (lambda (e) (enum=? e color-red))
+  (check (enum-set-map->list enum-name
+                             (enum-set-remove (lambda (e) (enum=? e color-red))
                                               color-set))
-         (remove (lambda (s) (eq? s 'red)) color-names)
-   => #t)
+   => (remove (lambda (s) (eq? s 'red)) color-names))
   (check (enum-set=? (enum-set-remove never color-set) color-set)
    => #t)
   (check (enum-set-empty? (enum-set-remove always color-set)) => #t)
