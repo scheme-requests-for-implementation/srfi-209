@@ -285,13 +285,21 @@ hash function, and orders enums based on their ordinal values.</p>
 (enum-set-map-&gt;list enum-name color-set)
  &rArr; (red orange yellow green cyan blue violet)
 </code></pre>
-<p><code>(enum-set</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p>Returns an enum-set containing the <em>enums</em>. It is an error unless all
-of them belong to the same enum type.</p>
+<p><code>(enum-set</code>&nbsp;<em>enum enum</em> …<code>)</code></p>
+<p>Returns an enum-set containing the <em>enums</em>. It is an error unless 
+there is at least one argument and all arguments
+belong to the same enum type.</p>
 <pre class="example"><code>(enum-set-contains? (enum-set color-red color-blue) color-red)
  &rArr; #t
 (enum-set-contains? (enum-set color-red color-blue) color-orange)
  &rArr; #f
+</code></pre>
+<p><code>(enum-empty-set</code>&nbsp;<em>enum-type…</em><code>)</code></p>
+<p>Returns an empty enum-set whose type is <em>enum-type</em>. <p>
+<pre class="example"><code>(define attacks (make-enum-type sword axe fire ice poison))
+<p>(define harmless (enum-empty-set attacks))
+<p>(enum-set->list harmless)
+ &rArr; ()
 </code></pre>
 <p><code>(list-&gt;enum-set</code>&nbsp;<em>list</em><code>)</code></p>
 <p>Returns an enum-set containing the members of <em>list</em>. It is an error
@@ -391,10 +399,16 @@ and <code>#f</code> otherwise.</p>
  &rArr; #t
 </code></pre>
 <h3 id="enum-set-mutators">Enum set mutators</h3>
-<p>These procedures are linear-update: that is, they may or may not modify
+<p>These procedures come in pairs.
+Procedures whose names end in <code>!</code>
+are linear-update: that is, they may or may not modify
 their <em>enum-set</em> argument, and any existing references to it are
-invalidated.</p>
-<p><code>(enum-set-adjoin!</code>&nbsp;<em>enum-set enum</em>
+invalidated.
+Other procedures are functional and return a newly allocated
+modified copy of their <em>enum-set</em> argument.
+<p><code>(enum-set-adjoin</code>&nbsp;<em>enum-set enum</em>
+…<code>)</code><br>
+<code>(enum-set-adjoin!</code>&nbsp;<em>enum-set enum</em>
 …<code>)</code></p>
 <p>Returns an enum-set that contains the members of <em>enum-set</em> and the
 <em>enums</em>. It is an error if the members of the result do not all belong
@@ -405,7 +419,9 @@ to the same enum type.</p>
 (enum-set&lt;? reddish reddish+blue) &rArr; #t
 (enum-set-contains? reddish+blue color-blue) &rArr; #t
 </code></pre>
-<p><code>(enum-set-delete!</code>&nbsp;<em>enum-set enum</em>
+<p><code>(enum-set-delete</code>&nbsp;<em>enum-set enum</em>
+…<code>)</code><br>
+<code>(enum-set-delete!</code>&nbsp;<em>enum-set enum</em>
 …<code>)</code></p>
 <p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
 the <em>enums</em>.</p>
@@ -415,7 +431,9 @@ the <em>enums</em>.</p>
 (enum-set&lt;? no-blue color-set) &rArr; #t
 (enum-set-contains? no-blue color-blue) &rArr; #f
 </code></pre>
-<p><code>(enum-set-delete-all!</code>&nbsp;<em>enum-set list</em>
+<p><code>(enum-set-delete-all</code>&nbsp;<em>enum-set list</em>
+…<code>)</code><br>
+<code>(enum-set-delete-all!</code>&nbsp;<em>enum-set list</em>
 …<code>)</code></p>
 <p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
 the members of <em>list</em>.</p>
