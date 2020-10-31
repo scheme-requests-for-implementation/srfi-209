@@ -320,6 +320,18 @@
 
 ;;;; Enum set mutators
 
+(define (enum-set-adjoin eset . enums)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (fold (lambda (enum mapping)
+             (assume (%well-typed-enum? type enum)
+                     "enum-set-adjoin: invalid argument")
+             (mapping-adjoin mapping (enum-ordinal enum) enum))
+           (enum-set-mapping eset)
+           enums))))
+
 (define (enum-set-adjoin! eset . enums)
   (assume (enum-set? eset))
   (let ((type (enum-set-type eset)))
@@ -332,9 +344,20 @@
            (enum-set-mapping eset)
            enums))))
 
+(define (enum-set-delete eset . enums)
+  (assume (enum-set? eset))
+  (enum-set-delete-all eset enums))
+
 (define (enum-set-delete! eset . enums)
   (assume (enum-set? eset))
   (enum-set-delete-all! eset enums))
+
+(define (enum-set-delete-all eset enum-lis)
+  (assume (enum-set? eset))
+  (make-enum-set
+   (enum-set-type eset)
+   (mapping-delete-all (enum-set-mapping eset)
+                       (map enum-ordinal enum-lis))))
 
 (define (enum-set-delete-all! eset enum-lis)
   (assume (enum-set? eset))

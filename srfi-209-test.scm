@@ -365,13 +365,26 @@
 (define (check-enum-set-mutators)
   (print-header "Running enum-set mutator tests...")
 
+  (let ((reddish+green (enum-set-adjoin reddish color-green)))
+    (check (enum-set<? reddish reddish+green)             => #t)
+    (check (enum-set-contains? reddish+green color-green) => #t))
+
   (let ((reddish+green
          (enum-set-adjoin! (enum-set-copy reddish) color-green)))
     (check (enum-set<? reddish reddish+green)             => #t)
     (check (enum-set-contains? reddish+green color-green) => #t))
 
+  (let ((reddish* (enum-set-delete reddish color-tangerine)))
+    (check (enum-set<? reddish* reddish)                 => #t)
+    (check (enum-set-contains? reddish* color-tangerine) => #f))
+
   (let ((reddish* (enum-set-delete! (enum-set-copy reddish)
                                     color-tangerine)))
+    (check (enum-set<? reddish* reddish)                 => #t)
+    (check (enum-set-contains? reddish* color-tangerine) => #f))
+
+  (let ((reddish* (enum-set-delete-all reddish
+                                       (list color-tangerine))))
     (check (enum-set<? reddish* reddish)                 => #t)
     (check (enum-set-contains? reddish* color-tangerine) => #f))
 

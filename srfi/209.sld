@@ -44,6 +44,7 @@
           enum-set<=? enum-set>=? enum-set-any? enum-set-every?
 
           enum-set-adjoin! enum-set-delete! enum-set-delete-all!
+          enum-set-adjoin enum-set-delete enum-set-delete-all
 
           enum-set-size enum-set->list enum-set-map->list enum-set-for-each
           enum-set-filter enum-set-remove
