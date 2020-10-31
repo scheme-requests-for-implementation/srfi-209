@@ -221,6 +221,10 @@
   (type enum-set-type)
   (mapping enum-set-mapping))
 
+(define (enum-empty-set type)
+  (assume (enum-type? type))
+  (make-enum-set type (mapping (enum-type-comparator type))))
+
 (define (%enum-list->enum-set type enums)
   (make-enum-set
    type

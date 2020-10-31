@@ -37,6 +37,7 @@
 
           enum-type->enum-set enum-set list->enum-set enum-set-project
           enum-set-copy
+          enum-empty-set
 
           enum-set? enum-set-contains? enum-set=?
           enum-set-empty? enum-set-disjoint? enum-set<? enum-set>?

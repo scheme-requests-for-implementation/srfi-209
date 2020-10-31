@@ -307,6 +307,8 @@
                              color-tangerine)
    => #f)
 
+  (check (enum-set-empty? (enum-empty-set pizza)) => #t)
+
   (check (enum-set-empty? empty-colors) => #t)
   (check (enum-set-empty? color-set)    => #f)
 

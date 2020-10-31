@@ -242,6 +242,8 @@
   (test-not (enum-set-contains? (enum-set color-red color-blue)
                                 color-tangerine))
 
+  (test-assert (enum-set-empty? (enum-empty-set pizza)))
+
   (test-assert (enum-set-empty? empty-colors))
   (test-not (enum-set-empty? color-set))
 
