@@ -242,6 +242,8 @@
   (test-not (enum-set-contains? (enum-set color-red color-blue)
                                 color-tangerine))
 
+  (test-assert (enum-set-empty? (enum-empty-set pizza)))
+
   (test-assert (enum-set-empty? empty-colors))
   (test-not (enum-set-empty? color-set))
 
@@ -292,13 +294,25 @@
 ;;;; Enum set mutators
 
 (test-group "Enum set mutators"
+  (let ((reddish+green (enum-set-adjoin reddish color-green)))
+    (test-assert (enum-set<? reddish reddish+green))
+    (test-assert (enum-set-contains? reddish+green color-green)))
+
   (let ((reddish+green
          (enum-set-adjoin! (enum-set-copy reddish) color-green)))
     (test-assert (enum-set<? reddish reddish+green))
     (test-assert (enum-set-contains? reddish+green color-green)))
 
+  (let ((reddish* (enum-set-delete reddish color-tangerine)))
+    (test-assert (enum-set<? reddish* reddish))
+    (test-not    (enum-set-contains? reddish* color-tangerine)))
+
   (let ((reddish* (enum-set-delete! (enum-set-copy reddish)
                                     color-tangerine)))
+    (test-assert (enum-set<? reddish* reddish))
+    (test-not    (enum-set-contains? reddish* color-tangerine)))
+
+  (let ((reddish* (enum-set-delete-all reddish (list color-tangerine))))
     (test-assert (enum-set<? reddish* reddish))
     (test-not    (enum-set-contains? reddish* color-tangerine)))
 

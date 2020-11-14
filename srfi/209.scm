@@ -103,11 +103,11 @@
 
 (define (%compare-enums compare enums)
   (assume (and (pair? enums) (pair? (cdr enums)))
-          "Invalid number of arguments")
+          "invalid number of arguments")
   (assume (enum? (car enums)))
   (let ((type (enum-type (car enums))))
     (assume (every (lambda (e) (%well-typed-enum? type e)) (cdr enums))
-            "All enums must be of the same enum type")
+            "invalid arguments")
     (apply compare (enum-type-comparator type) enums)))
 
 ;; enum=? will probably see the most use out of the various enum
@@ -117,11 +117,11 @@
   (let* ((type (enum-type enum1))
          (comp (enum-type-comparator type)))
     (cond ((null? enums)                            ; fast path
-           (assume (%well-typed-enum? type enum2))
+           (assume (%well-typed-enum? type enum2) "enum=?: invalid argument")
            ((comparator-equality-predicate comp) enum1 enum2))
           (else                                     ; variadic path
            (assume (every (lambda (e) (%well-typed-enum? type e)) enums)
-                   "Arguments must be of the same enum type")
+                   "enum=?: invalid arguments")
            (apply =? comp enum1 enum2 enums)))))
 
 (define (enum<? . enums) (%compare-enums <? enums))
@@ -151,9 +151,8 @@
 
 (define (%enum-project type finder key proc)
   (assume (enum-type? type))
-  (let ((enum (finder type key)))
-    (assume (enum? enum))
-    (proc enum)))
+  (cond ((finder type key) => proc)
+        (else (error "no enum found" type key))))
 
 (define (enum-name->ordinal type name)
   (assume (symbol? name))
@@ -222,13 +221,17 @@
   (type enum-set-type)
   (mapping enum-set-mapping))
 
+(define (enum-empty-set type)
+  (assume (enum-type? type))
+  (make-enum-set type (mapping (enum-type-comparator type))))
+
 (define (%enum-list->enum-set type enums)
   (make-enum-set
    type
    (mapping-unfold null?
                    (lambda (enums)
                      (let ((enum (car enums)))
-                       (assume (enum-type-contains? type enum))
+                       (assume (%well-typed-enum? type enum) "invalid argument")
                        (values (enum-ordinal enum) enum)))
                    cdr
                    enums
@@ -263,8 +266,8 @@
 
 (define (enum-set-contains? eset enum)
   (assume (enum-set? eset))
-  (assume (enum-type-contains? (enum-set-type eset) enum)
-          "enum-set-contains?: ill-typed enum")
+  (assume (%well-typed-enum? (enum-set-type eset) enum)
+          "enum-set-contains?: invalid argument")
   (mapping-ref (enum-set-mapping eset)
                (enum-ordinal enum)
                (lambda () #f)
@@ -317,20 +320,44 @@
 
 ;;;; Enum set mutators
 
+(define (enum-set-adjoin eset . enums)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (fold (lambda (enum mapping)
+             (assume (%well-typed-enum? type enum)
+                     "enum-set-adjoin: invalid argument")
+             (mapping-adjoin mapping (enum-ordinal enum) enum))
+           (enum-set-mapping eset)
+           enums))))
+
 (define (enum-set-adjoin! eset . enums)
   (assume (enum-set? eset))
   (let ((type (enum-set-type eset)))
     (make-enum-set
      type
      (fold (lambda (enum mapping)
-             (assume (%enum-type-contains?/no-check type enum))
+             (assume (%well-typed-enum? type enum)
+                     "enum-set-adjoin!: invalid argument")
              (mapping-adjoin! mapping (enum-ordinal enum) enum))
            (enum-set-mapping eset)
            enums))))
 
+(define (enum-set-delete eset . enums)
+  (assume (enum-set? eset))
+  (enum-set-delete-all eset enums))
+
 (define (enum-set-delete! eset . enums)
   (assume (enum-set? eset))
   (enum-set-delete-all! eset enums))
+
+(define (enum-set-delete-all eset enum-lis)
+  (assume (enum-set? eset))
+  (make-enum-set
+   (enum-set-type eset)
+   (mapping-delete-all (enum-set-mapping eset)
+                       (map enum-ordinal enum-lis))))
 
 (define (enum-set-delete-all! eset enum-lis)
   (assume (enum-set? eset))
