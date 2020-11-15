@@ -276,6 +276,16 @@
                       (map (lambda (sym) (enum-name->enum type sym))
                            names)))))
 
+;; [Deprecated] Returns a procedure which takes a symbol and returns
+;; the corresponding enum ordinal or #f.  This doesn't make any use
+;; of eset, beyond pulling out its enum type.
+(define (enum-set-indexer eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (lambda (name)
+      (cond ((enum-name->enum type name) => enum-ordinal)
+            (else #f)))))
+
 ;;;; Enum set predicates
 
 (define (enum-set-contains? eset enum)
