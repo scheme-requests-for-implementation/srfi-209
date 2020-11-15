@@ -57,8 +57,10 @@
 
           enum-set-union enum-set-intersection enum-set-difference
           enum-set-xor
+          enum-set-complement
           enum-set-union! enum-set-intersection! enum-set-difference!
           enum-set-xor!
+          enum-set-complement!
 
           make-enum-comparator
           )

@@ -473,3 +473,19 @@
 
 (define (enum-set-xor! eset1 eset2)
   (%enum-set-logical-op mapping-xor! eset1 eset2))
+
+(define (enum-set-complement eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (mapping-difference (enum-set-mapping (enum-set-universe eset))
+                         (enum-set-mapping eset)))))
+
+(define (enum-set-complement! eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (mapping-difference! (enum-set-mapping (enum-set-universe eset))
+                          (enum-set-mapping eset)))))
