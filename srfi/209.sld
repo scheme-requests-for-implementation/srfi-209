@@ -45,6 +45,7 @@
           enum-set-member?
           enum-set-empty? enum-set-disjoint? enum-set<? enum-set>?
           enum-set<=? enum-set>=? enum-set-any? enum-set-every?
+          enum-set-subset?
 
           enum-set-adjoin! enum-set-delete! enum-set-delete-all!
           enum-set-adjoin enum-set-delete enum-set-delete-all

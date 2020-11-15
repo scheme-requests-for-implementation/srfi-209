@@ -334,6 +334,9 @@
 (define (enum-set>=? eset1 eset2)
   (%compare-enum-sets mapping>=? eset1 eset2))
 
+(define (enum-set-subset? eset1 eset2)
+  (enum-set<=? eset1 eset2))
+
 (define (enum-set-any? pred eset)
   (assume (enum-set? eset))
   (mapping-any? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
