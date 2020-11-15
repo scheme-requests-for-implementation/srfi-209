@@ -225,7 +225,14 @@
   (assume (enum-type? type))
   (make-enum-set type (mapping (enum-type-comparator type))))
 
-(define (%enum-list->enum-set type enums)
+(define (enum-type->enum-set type)
+  (assume (enum-type? type))
+  (list->enum-set type (enum-type-enums type)))
+
+(define (enum-set type . enums) (list->enum-set type enums))
+
+(define (list->enum-set type enums)
+  (assume (or (pair? enums) (null? enums)))
   (make-enum-set
    type
    (mapping-unfold null?
@@ -236,16 +243,6 @@
                    cdr
                    enums
                    real-comparator)))
-
-(define (enum-type->enum-set type)
-  (assume (enum-type? type))
-  (%enum-list->enum-set type (enum-type-enums type)))
-
-(define (enum-set . enums) (list->enum-set enums))
-
-(define (list->enum-set enums)
-  (assume (pair? enums))
-  (%enum-list->enum-set (enum-type (car enums)) enums))
 
 (define (enum-set-project type eset)
   (assume (enum-type? type))
