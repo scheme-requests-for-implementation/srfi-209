@@ -43,6 +43,7 @@
   (value enum-value))
 
 (define (make-enum-type names+vals)
+  (assume (or (pair? names+vals) (null? names+vals)))
   (let* ((type (make-raw-enum-type #f #f #f))
          (enums (generate-enums type names+vals)))
     (set-enum-type-enum-vector! type (list->vector enums))
