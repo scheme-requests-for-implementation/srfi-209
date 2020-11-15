@@ -446,13 +446,13 @@
   (%enum-set-logical-op mapping-xor eset1 eset2))
 
 (define (enum-set-union! eset1 eset2)
-  (%enum-set-logical-op! mapping-union! eset1 eset2))
+  (%enum-set-logical-op mapping-union! eset1 eset2))
 
 (define (enum-set-intersection! eset1 eset2)
-  (%enum-set-logical-op! mapping-intersection! eset1 eset2))
+  (%enum-set-logical-op mapping-intersection! eset1 eset2))
 
 (define (enum-set-difference! eset1 eset2)
-  (%enum-set-logical-op! mapping-difference! eset1 eset2))
+  (%enum-set-logical-op mapping-difference! eset1 eset2))
 
 (define (enum-set-xor! eset1 eset2)
-  (%enum-set-logical-op! mapping-xor! eset1 eset2))
+  (%enum-set-logical-op mapping-xor! eset1 eset2))
