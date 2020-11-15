@@ -282,11 +282,10 @@
   (assume (enum-set? eset))
   (assume (%well-typed-enum? (enum-set-type eset) enum)
           "enum-set-contains?: invalid argument")
-  (mapping-ref (enum-set-mapping eset)
-               (enum-ordinal enum)
-               (lambda () #f)
-               (lambda (result)
-                 (enum=? result enum))))
+  (and (mapping-ref/default (enum-set-mapping eset)
+                            (enum-ordinal enum)
+                            #f)
+       #t))
 
 ;; FIXME: Avoid double (type, then set) lookup.
 (define (enum-set-member? name eset)
