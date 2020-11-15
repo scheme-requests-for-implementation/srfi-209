@@ -52,6 +52,8 @@
           enum-set-count
           enum-set-fold
 
+          enum-set-union enum-set-intersection enum-set-difference
+          enum-set-xor
           enum-set-union! enum-set-intersection! enum-set-difference!
           enum-set-xor!
 
