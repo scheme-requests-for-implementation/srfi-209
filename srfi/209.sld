@@ -39,6 +39,7 @@
           enum-set-copy
           enum-empty-set
           make-enumeration enum-set-universe enum-set-constructor
+          enum-set-type
 
           enum-set? enum-set-contains? enum-set=?
           enum-set-empty? enum-set-disjoint? enum-set<? enum-set>?
