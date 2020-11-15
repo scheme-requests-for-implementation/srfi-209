@@ -58,11 +58,13 @@
 (define color-set (enum-type->enum-set color))
 
 (define reddish (list->enum-set
+                 color
                  (map (lambda (name)
                         (enum-name->enum color name))
                       (take color-names 3))))
 
 (define ~reddish (list->enum-set
+                  color
                   (map (lambda (ord)
                          (enum-name->enum color ord))
                        (drop color-names 3))))
@@ -109,7 +111,7 @@
   (test 6 (enum-ordinal->value color 6))
 )
 
-(test-group "Enum type constructor"
+(test-group "Enum type constructors"
   ;; Mixing name and name+value args.
   (test-assert (enum-type?
                 (make-enum-type
@@ -229,17 +231,18 @@
                           (enum-set-contains? pizza-set enum))
                         (enum-type-enums pizza))))
 
-  (test-assert (let ((pizza-set (list->enum-set (enum-type-enums pizza))))
+  (test-assert (let ((pizza-set (list->enum-set pizza (enum-type-enums pizza))))
                  (every (lambda (enum)
                           (enum-set-contains? pizza-set enum))
                         (enum-type-enums pizza))))
 
-  (test-assert (let ((pizza-set (apply enum-set (enum-type-enums pizza))))
+  (test-assert (let ((pizza-set (apply enum-set pizza (enum-type-enums pizza))))
                  (every (lambda (enum) (enum-set-contains? pizza-set enum))
                         (enum-type-enums pizza))))
 
-  (test-assert (enum-set-contains? (enum-set color-red color-blue) color-red))
-  (test-not (enum-set-contains? (enum-set color-red color-blue)
+  (test-assert (enum-set-contains? (enum-set color color-red color-blue)
+                                   color-red))
+  (test-not (enum-set-contains? (enum-set color color-red color-blue)
                                 color-tangerine))
 
   (test-assert (enum-set-empty? (enum-empty-set pizza)))
@@ -247,7 +250,15 @@
   (test-assert (enum-set-empty? empty-colors))
   (test-not (enum-set-empty? color-set))
 
-  (test-assert (enum-set=? (enum-set-project color reddish) reddish))
+  (test-assert
+   (enum-set=? (enum-set-projection (enum-type->enum-set color) reddish)
+               reddish))
+  (let* ((color* (make-enum-type color-names))
+         (reddish* (list->enum-set color*
+                                   (map (lambda (name)
+                                          (enum-name->enum color* name))
+                                        (take color-names 3)))))
+    (test-assert (enum-set=? (enum-set-projection color* reddish) reddish*)))
 
   (test-not (eqv? color-set (enum-set-copy color-set)))
 )
@@ -378,9 +389,31 @@
                          (cons (enum-name enum) lis))
                        '()
                        color-set))
+
+  (test-assert (enum-set=? color-set (enum-set-universe reddish)))
+
+  (let* ((ds '((red "stop") (yellow "floor it!") (green "go")))
+         (us-traffic-light (make-enumeration ds))
+         (light-type (enum-set-type us-traffic-light)))
+    (test-assert (every (lambda (e) (enum-set-contains? us-traffic-light e))
+                        (map (lambda (p) (enum-name->enum light-type (car p)))
+                             ds))))
+
+  (let ((color-con (enum-set-constructor reddish)))
+    (test-assert (eqv? (enum-set-type (color-con '(green))) color))
+    (test-assert (enum-set=? (color-con color-names) color-set)))
+
+  (test-assert (enum-set-member? 'red reddish))
+  (test-not (enum-set-member? 'blue reddish))
 )
 
 (test-group "Enum set logical operations"
+  (test-assert (enum-set=? color-set (enum-set-union reddish ~reddish)))
+  (test-assert (enum-set-empty? (enum-set-intersection reddish ~reddish)))
+  (test-assert (enum-set=? ~reddish (enum-set-difference color-set reddish)))
+  (test-assert (enum-set=? color-set (enum-set-xor reddish ~reddish)))
+  (test-assert (enum-set-empty? (enum-set-xor reddish reddish)))
+
   (test-assert (enum-set=? color-set
                            (fresh-sets enum-set-union! reddish ~reddish)))
   (test-assert (enum-set-empty?
@@ -393,4 +426,11 @@
                (fresh-sets enum-set-xor! reddish ~reddish)))
   (test-assert (enum-set-empty?
                 (fresh-sets enum-set-xor! reddish reddish)))
+
+  (test-assert (enum-set-empty? (enum-set-complement color-set)))
+  (test-assert (enum-set=? (enum-set-complement reddish) ~reddish))
+  (test-assert (enum-set-empty?
+                (enum-set-complement! (enum-set-copy color-set))))
+  (test-assert (enum-set=?
+                (enum-set-complement! (enum-set-copy reddish)) ~reddish))
 )
