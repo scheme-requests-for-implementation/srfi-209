@@ -260,6 +260,18 @@
   (make-enum-set (enum-set-type eset)
                  (mapping-copy (enum-set-mapping eset))))
 
+(define (make-enumeration names)
+  (enum-type->enum-set (make-enum-type names)))
+
+(define (enum-set-universe eset)
+  (assume (enum-set? eset))
+  (enum-type->enum-set (enum-set-type eset)))
+
+(define (enum-set-constructor eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (lambda (names) (list->enum-set type names))))
+
 ;;;; Enum set predicates
 
 (define (enum-set-contains? eset enum)
