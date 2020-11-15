@@ -288,6 +288,17 @@
                (lambda (result)
                  (enum=? result enum))))
 
+;; FIXME: Avoid double (type, then set) lookup.
+(define (enum-set-member? name eset)
+  (assume (symbol? name))
+  (assume (enum-set? eset))
+  (let ((enum (enum-name->enum (enum-set-type eset) name)))
+    (assume enum "enum-set-member?: invalid enum name" name eset)
+    (and (mapping-ref/default (enum-set-mapping eset)
+                              (enum-ordinal enum)
+                              #f)
+         #t)))
+
 (define (%enum-set-type=? eset1 eset2)
   (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
 

@@ -42,6 +42,7 @@
           enum-set-type
 
           enum-set? enum-set-contains? enum-set=?
+          enum-set-member?
           enum-set-empty? enum-set-disjoint? enum-set<? enum-set>?
           enum-set<=? enum-set>=? enum-set-any? enum-set-every?
 
