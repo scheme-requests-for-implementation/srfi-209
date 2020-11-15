@@ -271,7 +271,10 @@
 (define (enum-set-constructor eset)
   (assume (enum-set? eset))
   (let ((type (enum-set-type eset)))
-    (lambda (names) (list->enum-set type names))))
+    (lambda (names)
+      (list->enum-set type
+                      (map (lambda (sym) (enum-name->enum type sym))
+                           names)))))
 
 ;;;; Enum set predicates
 
