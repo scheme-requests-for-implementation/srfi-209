@@ -35,7 +35,7 @@
 
           enum-next enum-prev
 
-          enum-type->enum-set enum-set list->enum-set enum-set-project
+          enum-type->enum-set enum-set list->enum-set enum-set-projection
           enum-set-copy
           enum-empty-set
 

@@ -244,16 +244,17 @@
                    enums
                    real-comparator)))
 
-(define (enum-set-project type eset)
-  (assume (enum-type? type))
+(define (enum-set-projection src eset)
+  (assume (or (enum-type? src) (enum-set? src)))
   (assume (enum-set? eset))
-  (make-enum-set
-   type
-   (mapping-map (lambda (_ enum)
-                  (let ((enum* (enum-name->enum type (enum-name enum))))
-                    (values (enum-ordinal enum*) enum*)))
-                real-comparator
-                (enum-set-mapping eset))))
+  (let ((type (if (enum-type? src) src (enum-set-type src))))
+    (make-enum-set
+     type
+     (mapping-map (lambda (_ enum)
+                    (let ((enum* (enum-name->enum type (enum-name enum))))
+                      (values (enum-ordinal enum*) enum*)))
+                  real-comparator
+                  (enum-set-mapping eset)))))
 
 (define (enum-set-copy eset)
   (make-enum-set (enum-set-type eset)
