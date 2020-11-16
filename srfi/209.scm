@@ -510,7 +510,7 @@
       (define-syntax type-name
         (syntax-rules ()
           ((_ name)
-           (enum-name->enum etype name))))
+           (enum-name->enum etype 'name))))
       (define-syntax constructor
         (syntax-rules ()
           ((_ . names)
