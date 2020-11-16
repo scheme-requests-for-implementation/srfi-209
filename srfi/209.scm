@@ -218,11 +218,11 @@
   (make-enum-set type mapping)
   enum-set?
   (type enum-set-type)
-  (mapping enum-set-mapping))
+  (bitmap enum-set-bitmap set-enum-set-bitmap!))
 
 (define (enum-empty-set type)
   (assume (enum-type? type))
-  (make-enum-set type (mapping (enum-type-comparator type))))
+  (make-enum-set type 0))
 
 (define (enum-type->enum-set type)
   (assume (enum-type? type))
@@ -234,14 +234,11 @@
   (assume (or (pair? enums) (null? enums)))
   (make-enum-set
    type
-   (mapping-unfold null?
-                   (lambda (enums)
-                     (let ((enum (car enums)))
-                       (assume (%well-typed-enum? type enum) "invalid argument")
-                       (values (enum-ordinal enum) enum)))
-                   cdr
-                   enums
-                   real-comparator)))
+   (fold (lambda (e b)
+           (assume (%well-typed-enum? type e) "ill-typed enum")
+           (bitwise-ior b (expt 2 (enum-ordinal e))))
+         0
+         enums)))
 
 ;; Returns a set of enums drawn from the enum-type src with the same
 ;; names as the enums of eset.
@@ -258,8 +255,7 @@
                   (enum-set-mapping eset)))))
 
 (define (enum-set-copy eset)
-  (make-enum-set (enum-set-type eset)
-                 (mapping-copy (enum-set-mapping eset))))
+  (make-enum-set (enum-set-type eset) (enum-set-bitmap eset)))
 
 ;; [Deprecated]
 (define (make-enumeration names)
@@ -297,34 +293,27 @@
   (assume (enum-set? eset))
   (assume (%well-typed-enum? (enum-set-type eset) enum)
           "enum-set-contains?: invalid argument")
-  (and (mapping-ref/default (enum-set-mapping eset)
-                            (enum-ordinal enum)
-                            #f)
-       #t))
+  (not (zero? (bitwise-and (enum-set-bitmap eset) (enum-ordinal enum)))))
 
 ;; FIXME: Avoid double (type, then set) lookup.
 (define (enum-set-member? name eset)
   (assume (symbol? name))
   (assume (enum-set? eset))
-  (let ((enum (enum-name->enum (enum-set-type eset) name)))
-    (assume enum "enum-set-member?: invalid enum name" name eset)
-    (and (mapping-ref/default (enum-set-mapping eset)
-                              (enum-ordinal enum)
-                              #f)
-         #t)))
+  (let ((ord (enum-name->ordinal (enum-set-type eset) name)))
+    (not (zero? (bitwise-and (enum-set-bitmap eset) (expt 2 ord))))))
 
 (define (%enum-set-type=? eset1 eset2)
   (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
 
 (define (enum-set-empty? eset)
   (assume (enum-set? eset))
-  (mapping-empty? (enum-set-mapping eset)))
+  (zero? (enum-set-bitmap eset)))
 
 (define (enum-set-disjoint? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
-  (mapping-disjoint? (enum-set-mapping eset1) (enum-set-mapping eset2)))
+  (zero? (bitwise-and (enum-set-bitmap eset1) (enum-set-bitmap eset2))))
 
 (define (%compare-enum-sets compare eset1 eset2)
   (assume (enum-set? eset1))
@@ -367,24 +356,23 @@
   (let ((type (enum-set-type eset)))
     (make-enum-set
      type
-     (fold (lambda (enum mapping)
+     (fold (lambda (enum b)
              (assume (%well-typed-enum? type enum)
                      "enum-set-adjoin: invalid argument")
-             (mapping-adjoin mapping (enum-ordinal enum) enum))
-           (enum-set-mapping eset)
+             (bitwise-ior b (expt 2 (enum-ordinal enum))))
+           (enum-set-bitmap eset)
            enums))))
 
 (define (enum-set-adjoin! eset . enums)
   (assume (enum-set? eset))
-  (let ((type (enum-set-type eset)))
-    (make-enum-set
-     type
-     (fold (lambda (enum mapping)
-             (assume (%well-typed-enum? type enum)
-                     "enum-set-adjoin!: invalid argument")
-             (mapping-adjoin! mapping (enum-ordinal enum) enum))
-           (enum-set-mapping eset)
-           enums))))
+  (set-enum-set-bitmap!
+   eset
+   (fold (lambda (enum b)
+           (assume (%well-typed-enum? type enum)
+                   "enum-set-adjoin: invalid argument")
+           (bitwise-ior b (expt 2 (enum-ordinal enum))))
+         (enum-set-bitmap eset)
+         enums)))
 
 (define (enum-set-delete eset . enums)
   (assume (enum-set? eset))
