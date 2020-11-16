@@ -319,7 +319,7 @@ unless all the members are enums belonging to <em>enum-type</em>.</p>
 </code></pre>
 <p><code>(enum-set-projection</code>&nbsp;<em>enum-type-or-set
 enum-set</em><code>)</code></p>
-If <em>enum-type-or-set</em> is an enum set, its enum type is extracted
+<p>If <em>enum-type-or-set</em> is an enum set, its enum type is extracted
 and used; otherwise, the enum type is used directly.
 Returns an enum set containing the enums belonging to the enum type
 that have the same names as the members of <em>enum-set</em>, whose enum type
@@ -601,13 +601,12 @@ the elements of the result do not belong to the same enum type.</p>
 </code></pre>
 
 <h3>Syntax</h3>
-<div align=left><tt>(define-enum &lt;type-name&gt;</tt>
-<a name="node_idx_1262"></a><tt>(&lt;name-value&gt;&nbsp;<tt>...</tt>)
-&lt;constructor-syntax&gt;)</tt><br/>
-<small><div align=left><tt>(define-enumeration &lt;type-name&gt;</tt>
-<a name="node_idx_1262"></a><tt>(&lt;name-value&gt;&nbsp;<tt>...</tt>)
-&lt;constructor-syntax&gt;)</tt></small>
-</p>
+<p><code>(define-enum&nbsp;</code><em>type-name</em><code>
+(</code><em>name-value</em>&nbsp;<code>...)</code>&nbsp;
+<em>constructor-syntax</em><code>)</code></p>
+<p><small><code>(define-enumeration&nbsp;</code><em>type-name</em>
+<code>(</code><em>name-value</em>&nbsp;<code>...)</code>&nbsp;
+<em>constructor-syntax</em><code>)</code></small></p>
 <p>These macros allocate a newly created enum type and
 provide two macros for constructing its members and sets of its
 members.  They are definitions and can appear
