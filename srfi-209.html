@@ -85,7 +85,7 @@ elsewhere, or <a href="https://srfi.schemers.org/srfi-146/srfi-146.html">SRFI
 In that library, neither enum types nor enum objects are exposed,
 only enum names and enum sets.  Some of the R6RS-specific procedures
 given below operate in those terms, and as such are redundant with
-other procedures.  These are deprecated, and have been 
+other procedures.  These are deprecated, and have been
 set in <small>small print</small>.</p>
 
 <h3 id="predicates">Predicates</h3>
@@ -299,7 +299,7 @@ hash function, and orders enums based on their ordinal values.</p>
 </code></pre>
 <p><code>(enum-set</code>&nbsp;<em>enum-type enum</em> …<code>)</code></p>
 <p>Returns an enum set that can contain enums of the type <em>enum-type</em>
-and containing the <em>enums</em>. It is an error unless 
+and containing the <em>enums</em>. It is an error unless
 all the <em>enums</em> belong to <em>enum-type</em>.</p>
 <pre class="example"><code>(enum-set-contains? (enum-set color-red color-blue) color-red)
  &rArr; #t
@@ -583,7 +583,7 @@ enum-set-2</em><code>)</code><br/>
 enum-set-2</em><code>)</code></p>
 <p>Returns an enum set containing the elements of <em>enum-set-1</em> but not
 <em>enum-set-2</em>. It is an error if all the elements of the result do not
-belong to the same enum type. 
+belong to the same enum type.
 <pre class="example"><code>(enum-set=? ~reddish (enum-set-difference! color-set reddish))
  &rArr; #t
 </code></pre>
