@@ -61,13 +61,13 @@ are grouped into <em>enumeration types</em> (called <em>enum classes</em> in
 Java). In Java, each enumeration type is allowed to declare the number and
 types of values associated with each object, but in this SRFI an enumeration
 object has exactly one value; this is useful when translating from C to record
-the numeric value, but has other uses as well. The universes of R6RS correspond
-to enum types, but they are not reified.</p>
+the numeric value, but has other uses as well.
+</p>
 <p>In this SRFI, each enum has four properties: the enum type to which it
 belongs, its name (a symbol), its ordinal (an exact integer), and its value
 (any object). An enum type provides access to all the enums that belong to it
 by name or ordinal.</p>
-<p><em>Enumeration sets</em> are used to represent multiple enums that belong
+<p><em>Enumeration sets</em> or <em>enum sets</em> used to represent multiple enums that belong
 to the same type. They provide a subset of the operations provided by <a
 href="https://srfi.schemers.org/srfi-113/srfi-113.html">SRFI 113</a> general
 sets.</p>
@@ -78,6 +78,15 @@ elsewhere, or <a href="https://srfi.schemers.org/srfi-146/srfi-146.html">SRFI
 146</a> mappings can be used instead.</p>
 
 <h2 id="specification">Specification</h2>
+
+<h3 id="r6rs">R6RS compatibility</h3>
+
+<p>This SRFI provides the same procedures as the <code>(rnrs enums)</code> library.
+In that library, neither enum types nor enum objects are exposed,
+only enum names and enum sets.  Some of the R6RS-specific procedures
+given below operate in those terms, and as such are redundant with
+other procedures.  These are deprecated, and have been
+set in <small>small print</small>.</p>
 
 <h3 id="predicates">Predicates</h3>
 <p><code>(enum-type?</code>&nbsp;<em>obj</em><code>)</code></p>
@@ -142,6 +151,9 @@ this SRFI, with the identifier <em>type</em>-<em>name</em> referring to
 the enum of type <em>type</em> with name <em>name</em>.</p>
 <pre class="example"><code>(define color
   (make-enum-type '(red orange yellow green cyan blue violet)))
+
+(define us-traffic-light
+  (make-enum-type '(red yellow green)))
 
 (define pizza
   (make-enum-type '((margherita "tomato and mozzarella")
@@ -241,14 +253,14 @@ ordered by increasing ordinal.</p>
 </code></pre>
 <h3 id="enum-objects">Enum objects</h3>
 <p><code>(enum-next</code>&nbsp;<em>enum</em><code>)</code></p>
-<p>Returns the enum that belongs to the same enum-type as <em>enum</em> and has
+<p>Returns the enum that belongs to the same enum type as <em>enum</em> and has
 an ordinal one greater than <em>enum</em>. Returns <code>#f</code> if there is
 no such enum.</p>
 <pre class="example"><code>(enum-name (enum-next color-red)) &rArr; orange
 (enum-next (enum-max color)) &rArr; #f
 </code></pre>
 <p><code>(enum-prev</code>&nbsp;<em>enum</em><code>)</code></p>
-<p>Returns the enum that belongs to the same enum-type as <em>enum</em> and has
+<p>Returns the enum that belongs to the same enum type as <em>enum</em> and has
 an ordinal one less than <em>enum</em>. Returns <code>#f</code> if there is no
 such enum.</p>
 <pre class="example"><code>(enum-name (enum-prev color-orange)) &rArr; red
@@ -285,33 +297,58 @@ hash function, and orders enums based on their ordinal values.</p>
 (enum-set-map-&gt;list enum-name color-set)
  &rArr; (red orange yellow green cyan blue violet)
 </code></pre>
-<p><code>(enum-set</code>&nbsp;<em>enum</em> …<code>)</code></p>
-<p>Returns an enum-set containing the <em>enums</em>. It is an error unless all
-of them belong to the same enum type.</p>
+<p><code>(enum-set</code>&nbsp;<em>enum-type enum</em> …<code>)</code></p>
+<p>Returns an enum set that can contain enums of the type <em>enum-type</em>
+and containing the <em>enums</em>. It is an error unless
+all the <em>enums</em> belong to <em>enum-type</em>.</p>
 <pre class="example"><code>(enum-set-contains? (enum-set color-red color-blue) color-red)
  &rArr; #t
-(enum-set-contains? (enum-set color-red color-blue) color-orange)
+(enum-set-contains? (enum-set color color-red color-blue) color-orange)
  &rArr; #f
 </code></pre>
-<p><code>(list-&gt;enum-set</code>&nbsp;<em>list</em><code>)</code></p>
-<p>Returns an enum-set containing the members of <em>list</em>. It is an error
-unless all the members are enums belonging to the same enum type. It is also an
-error if <em>list</em> is empty, since the relevant enum type cannot be
-determined.</p>
+<p><code>(list-&gt;enum-set</code>&nbsp;<em>enum-type list</em><code>)</code></p>
+<p>Returns an enum set with the specified <em>enum-type</em> that
+contains the members of <em>list</em>. It is an error
+unless all the members are enums belonging to <em>enum-type</em>.</p>
 <pre class="example"><code>(list-&gt;enum-set (enum-type-enums pizza))
  = (enum-type-&gt;enum-set pizza)
 
-(enum-set-contains? (list-&gt;enum-set (list pizza-funghi pizza-chicago))
+(enum-set-contains? (list-&gt;enum-set pizza (list pizza-funghi pizza-chicago))
                     pizza-funghi)
  &rArr; #t
 </code></pre>
-<p><code>(enum-set-project</code>&nbsp;<em>enum-type
+<p><code>(enum-set-projection</code>&nbsp;<em>enum-type-or-set
 enum-set</em><code>)</code></p>
-<p>Returns an enum set containing the enums belonging to <em>enum-type</em>
+<p>If <em>enum-type-or-set</em> is an enum set, its enum type is extracted
+and used; otherwise, the enum type is used directly.
+Returns an enum set containing the enums belonging to the enum type
 that have the same names as the members of <em>enum-set</em>, whose enum type
-typically is not the same as <em>enum-type</em>.</p>
+need not be not the same as <em>enum-type</em>.</p>
 <p><code>(enum-set-copy</code>&nbsp;<em>enum-set</em><code>)</code></p>
 <p>Returns a copy of <em>enum-set</em>.</p>
+<p><small><code>(make-enumeration</code>&nbsp;<em>symbol-list</em><code>)</code></small>
+</p>
+<p><small>Creates a newly allocated enum type.
+The names and values of its enums are the members of
+<em>symbol-list</em>, and they appear in the enum set
+in the order given by the list.
+Then an enum set containing all the enums of this
+enum type is newly allocated and returned.
+The enum type can be retrieved with <code>enum-set-type</code>.
+</small></p>
+<p><small><code>(enum-set-universe</code>&nbsp;<em>enum-set</em><code>)</code></small>
+</p>
+<p><small>Retrieves the enum type of <em>enum-set</em>, and returns a newly allocated
+enum set containing all the enums of the enum type.</small></p>
+<p><small><code>(enum-set-constructor</code>&nbsp;<em>enum-set</em><code>)</code></small>
+</p>
+<p><small>Returns a procedure that accepts one argument, a list of symbols.
+Returns a newly allocated enum set containing the enums whose names are
+members of the list of symbols.
+It is an error if any of the symbols is not the name of an enum in the
+enum type associated with <em>enum-set</em>.
+in <em>enum-set</em>, then the ordinal of that enum is returned.
+Otherwise, <code>#f</code> is returned.</small></p>
 <h3 id="enum-set-predicates">Enum set predicates</h3>
 <p><code>(enum-set?</code>&nbsp;<em>obj</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>obj</em> is an enum set and <code>#f</code>
@@ -324,6 +361,12 @@ members of <em>enum-set</em>.</p>
 <pre class="example"><code>(enum-set-contains? color-set color-blue) &rArr; #t
 (enum-set-contains? (enum-set-delete! color-set color-blue) color-blue) &rArr; #f
 </code></pre>
+<p><code>(enum-set-member?</code>&nbsp;<em>symbol
+enum-set</em><code>)</code></p>
+<p>Returns <code>#t</code> if <em>symbol</em>
+is the name of a member of <em>enum-set</em>.
+It is an error if <em>symbol</em> is not the name
+of an enum belonging to the enum type of <em>enum-set</em>.</p>
 <p><code>(enum-set-empty?</code>&nbsp;<em>enum-set</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum-set</em> is empty,
 and <code>#f</code> otherwise.</p>
@@ -347,11 +390,6 @@ do not have any enum objects in common, and <code>#f</code> otherwise.</p>
 (enum-set-disjoint? color-set reddish) &rArr; #f
 (enum-set-disjoint? reddish ~reddish) &rArr; #t
 </code></pre>
-<p><code>(enum-set-contains?</code>&nbsp;<em>enum-set
-enum</em><code>)</code></p>
-<p>Returns <code>#t</code> if <em>enum</em> is a member of <em>enum-set</em>.
-It is an error if <em>enum</em> does not belong to the same enum type as the
-members of <em>enum-set</em>.</p>
 <p>Note that the following three procedures do not obey the trichotomy law,
 and cannot be used to define a comparator.</p>
 <p><code>(enum-set=?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code><br/>
@@ -372,6 +410,17 @@ to the same type.</p>
 (enum-set&lt;=? reddish color-set) &rArr; #t
 (enum-set&gt;=? reddish color-set) &rArr; #f
 </code></pre>
+<p><code>(enum-set-subset?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code></p>
+<p> Let <em>enum-type-1</em> and <em>enum-type-2</em>
+be the enum types of <em>enum-set-1</em> and <em>enum-set-2</em>
+respectively.
+Then, if the names of the enums in <em>enum-type-1</em> do not constitute
+a subset of the names of the enums in <em>enum-type-2</em>,
+return <code>#f</code>.
+Likewise, if the names of the enums in <em>enum-set-1</em> do not constitute
+a subset of the names of the enums in <em>enum-set-2</em>,
+return <code>#f</code>.
+Otherwise return <code>#t</code>.</p>
 <p><code>(enum-set-any?</code>&nbsp;<em>pred enum-set</em><code>)</code><br/>
 <code>(enum-set-every?</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
 <p>Returns <code>#t</code> if any/every application of <em>proc</em>
@@ -390,13 +439,28 @@ and <code>#f</code> otherwise.</p>
                  pizza-set)
  &rArr; #t
 </code></pre>
+<h3 id="enum-set-accessors">Enum set accessors</h3>
+<p><code>(enum-set-type</code>&nbsp;<em>enum-set</em><code>)</code></p>
+<p>Returns the enum type associated with <em>enum-set</em>.</p>
+<p><small><code>(enum-set-indexer</code>&nbsp;<em>enum-set</em><code>)</code></small>
+</p>
+<p><small>Returns a procedure that accepts one argument, a symbol.
+When this procedure is called, if the symbol is the name of an enum
+in <em>enum-set</em>, then the ordinal of that enum is returned.
+Otherwise, <code>#f</code> is returned.</small></p>
 <h3 id="enum-set-mutators">Enum set mutators</h3>
-<p>These procedures are linear-update: that is, they may or may not modify
+<p>These procedures come in pairs.
+Procedures whose names end in <code>!</code>
+are linear-update: that is, they may or may not modify
 their <em>enum-set</em> argument, and any existing references to it are
-invalidated.</p>
-<p><code>(enum-set-adjoin!</code>&nbsp;<em>enum-set enum</em>
+invalidated.
+Other procedures are functional and return a newly allocated
+modified copy of their <em>enum-set</em> argument.</p>
+<p><code>(enum-set-adjoin</code>&nbsp;<em>enum-set enum</em>
+…<code>)</code><br>
+<code>(enum-set-adjoin!</code>&nbsp;<em>enum-set enum</em>
 …<code>)</code></p>
-<p>Returns an enum-set that contains the members of <em>enum-set</em> and the
+<p>Returns an enum set that contains the members of <em>enum-set</em> and the
 <em>enums</em>. It is an error if the members of the result do not all belong
 to the same enum type.</p>
 <pre class="example"><code>(define reddish+blue
@@ -405,9 +469,11 @@ to the same enum type.</p>
 (enum-set&lt;? reddish reddish+blue) &rArr; #t
 (enum-set-contains? reddish+blue color-blue) &rArr; #t
 </code></pre>
-<p><code>(enum-set-delete!</code>&nbsp;<em>enum-set enum</em>
+<p><code>(enum-set-delete</code>&nbsp;<em>enum-set enum</em>
+…<code>)</code><br>
+<code>(enum-set-delete!</code>&nbsp;<em>enum-set enum</em>
 …<code>)</code></p>
-<p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
+<p>Returns an enum set that contains the members of <em>enum-set</em> excluding
 the <em>enums</em>.</p>
 <pre class="example"><code>(define no-blue
   (enum-set-delete! (enum-set-copy color-set) color-blue))
@@ -415,9 +481,11 @@ the <em>enums</em>.</p>
 (enum-set&lt;? no-blue color-set) &rArr; #t
 (enum-set-contains? no-blue color-blue) &rArr; #f
 </code></pre>
-<p><code>(enum-set-delete-all!</code>&nbsp;<em>enum-set list</em>
+<p><code>(enum-set-delete-all</code>&nbsp;<em>enum-set list</em>
+…<code>)</code><br>
+<code>(enum-set-delete-all!</code>&nbsp;<em>enum-set list</em>
 …<code>)</code></p>
-<p>Returns an enum-set that contains the members of <em>enum-set</em> excluding
+<p>Returns an enum set that contains the members of <em>enum-set</em> excluding
 the members of <em>list</em>.</p>
 <pre class="example"><code>(define empty-colors
   (enum-set-delete-all! (enum-set-copy color-set)
@@ -445,7 +513,7 @@ that satisfy <em>pred</em>.</p>
 </code></pre>
 <p><code>(enum-set-filter</code>&nbsp;<em>pred enum-set</em><code>)</code><br/>
 <code>(enum-set-remove</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
-<p>Returns an enum-set containing the enums in <em>enum-set</em>
+<p>Returns an enum set containing the enums in <em>enum-set</em>
 that satisfy / do not satisfy <em>pred</em>.</p>
 <p><code>(enum-set-map->list</code>&nbsp;<em>proc enum-set</em><code>)</code></p>
 <p>Invokes <em>proc</em> on each member of <em>enum-set</em> in increasing
@@ -476,12 +544,24 @@ the current state is returned.</p>
  = (reverse (enum-set-&gt;list color-set))
 </code></pre>
 <h3 id="enum-set-logical-operations">Enum set logical operations</h3>
-<p><code>(enum-set-union!</code>&nbsp;<em>enum-set-1
+<p>These procedures come in pairs.
+Procedures whose names end in <code>!</code>
+are linear-update: that is, they may or may not modify
+their <em>enum-set</em> argument(s), and any existing references to them are
+invalidated.
+Other procedures are functional and return a newly allocated
+modified copy of their <em>enum-set</em> argument.</p>
+<p><code>(enum-set-complement</code>&nbsp;<em>enum-set</em><code>)</code><br/>
+<code>(enum-set-complement!</code>&nbsp;<em>enum-set</em><code>)</code></p>
+<p>Returns an enum-set that contains the elements of the enum type of
+<em>enum-set</em> that are not members of <em>enum-set</em>.</p>
+<p><code>(enum-set-union</code>&nbsp;<em>enum-set-1
+enum-set-2</em><code>)</code><br/>
+<code>(enum-set-union!</code>&nbsp;<em>enum-set-1
 enum-set-2</em><code>)</code></p>
-<p>Returns an enum-set containing all the elements of either
+<p>Returns an enum set containing all the elements of either
 <em>enum-set-1</em> or <em>enum-set-2</em>. It is an error if all the elements
-of the result do not belong to the same enum type. The contents of either or
-both enum-sets may be destroyed in the process.</p>
+of the result do not belong to the same enum type.</p>
 <pre class="example"><code>(enum-set-map-&gt;list enum-name
                     (enum-set-union! (enum-set color-orange)
                                      (enum-set color-blue)))
@@ -489,36 +569,61 @@ both enum-sets may be destroyed in the process.</p>
 
 (enum-set=? color-set (enum-set-union! reddish ~reddish)) &rArr; #t
 </code></pre>
-<p><code>(enum-set-intersection!</code>&nbsp;<em>enum-set-1
-enum-set-2</em><code>)</code></p>
+<code>(enum-set-intersection!</code>&nbsp;<em>enum-set-1
+enum-set-2</em><code>)</code><br/>
 <p>Returns an enum-set containing all the elements that appear in both
 <em>enum-set-1</em> and <em>enum-set-2</em>. It is an error if all the elements
-of the result do not belong to the same enum type. The contents of either or
-both enum-sets may be destroyed in the process.</p>
+of the result do not belong to the same enum type.</p>
 <pre class="example"><code>(enum-set-empty? (enum-set-intersection! reddish ~reddish))
  &rArr; #t
 </code></pre>
-<p><code>(enum-set-difference!</code>&nbsp;<em>enum-set-1
+<p><code>(enum-set-difference</code>&nbsp;<em>enum-set-1
+enum-set-2</em><code>)</code><br/>
+<code>(enum-set-difference!</code>&nbsp;<em>enum-set-1
 enum-set-2</em><code>)</code></p>
-<p>Returns an enum-set containing the elements of <em>enum-set-1</em> but not
+<p>Returns an enum set containing the elements of <em>enum-set-1</em> but not
 <em>enum-set-2</em>. It is an error if all the elements of the result do not
-belong to the same enum type. The contents of either or both enum-sets may be
-destroyed in the process.</p>
+belong to the same enum type.
 <pre class="example"><code>(enum-set=? ~reddish (enum-set-difference! color-set reddish))
  &rArr; #t
 </code></pre>
-<p><code>(enum-set-xor!</code>&nbsp;<em>enum-set-1
+<p><code>(enum-set-xor</code>&nbsp;<em>enum-set-1
+enum-set-2</em><code>)</code><br/>
+<code>(enum-set-xor!</code>&nbsp;<em>enum-set-1
 enum-set-2</em><code>)</code></p>
-<p>Returns an enum-set containing all the elements of either
+<p>Returns an enum set containing all the elements of either
 <em>enum-set-1</em> or <em>enum-set-2</em> but not both. It is an error if all
-the elements of the result do not belong to the same enum type. The contents of
-either or both enum-sets may be destroyed in the process.</p>
+the elements of the result do not belong to the same enum type.</p>
 <pre class="example"><code>(enum-set=? color-set (enum-set-xor! reddish ~reddish))
  &rArr; #t
 
 (enum-set-empty? (enum-set-xor! reddish reddish)) &rArr; #t
 </code></pre>
 
+<h3>Syntax</h3>
+<p><code>(define-enum&nbsp;</code><em>type-name</em><code>
+(</code><em>name-value</em>&nbsp;<code>...)</code>&nbsp;
+<em>constructor-syntax</em><code>)</code></p>
+<p><small><code>(define-enumeration&nbsp;</code><em>type-name</em>
+<code>(</code><em>name-value</em>&nbsp;<code>...)</code>&nbsp;
+<em>constructor-syntax</em><code>)</code></small></p>
+<p>These macros allocate a newly created enum type and
+provide two macros for constructing its members and sets of its
+members.  They are definitions and can appear
+anywhere any other definition can appear.
+Each &lt;name-value&gt;&nbsp; is either a symbol naming an enum
+or a two-element list specifying the name and value
+of an enum.</p>
+<p>
+&lt;Type-name&gt; is an identifier that is bound to a macro.
+When &lt;type-name&gt; is invoked as <code>(</code>&lt;type-name&gt; &lt;symbol&gt;<code>)</code>,
+it returns the enum named &lt;symbol&gt; in the case of <code>define-enum</code>
+or the symbol itself in the case of <code>define-enumeration</code>.
+<p>
+&lt;Constructor-syntax&gt; is an identifier that is bound to a
+macro that, given any finite sequence of the names of enums,
+possibly with duplicates, expands into an expression that evaluates
+to an enum set of those enums.</p>
 <h2>Implementation</h2>
 
 The implementation of this SRFI is in its repository

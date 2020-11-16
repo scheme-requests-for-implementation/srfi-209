@@ -43,6 +43,7 @@
   (value enum-value))
 
 (define (make-enum-type names+vals)
+  (assume (or (pair? names+vals) (null? names+vals)))
   (let* ((type (make-raw-enum-type #f #f #f))
          (enums (generate-enums type names+vals)))
     (set-enum-type-enum-vector! type (list->vector enums))
@@ -103,25 +104,23 @@
 
 (define (%compare-enums compare enums)
   (assume (and (pair? enums) (pair? (cdr enums)))
-          "Invalid number of arguments")
+          "invalid number of arguments")
   (assume (enum? (car enums)))
   (let ((type (enum-type (car enums))))
     (assume (every (lambda (e) (%well-typed-enum? type e)) (cdr enums))
-            "All enums must be of the same enum type")
+            "invalid arguments")
     (apply compare (enum-type-comparator type) enums)))
 
-;; enum=? will probably see the most use out of the various enum
-;; comparisons, so we provide a two-argument fast path.
 (define (enum=? enum1 enum2 . enums)
   (assume (enum? enum1))
   (let* ((type (enum-type enum1))
          (comp (enum-type-comparator type)))
     (cond ((null? enums)                            ; fast path
-           (assume (%well-typed-enum? type enum2))
+           (assume (%well-typed-enum? type enum2) "enum=?: invalid argument")
            ((comparator-equality-predicate comp) enum1 enum2))
           (else                                     ; variadic path
            (assume (every (lambda (e) (%well-typed-enum? type e)) enums)
-                   "Arguments must be of the same enum type")
+                   "enum=?: invalid arguments")
            (apply =? comp enum1 enum2 enums)))))
 
 (define (enum<? . enums) (%compare-enums <? enums))
@@ -151,9 +150,8 @@
 
 (define (%enum-project type finder key proc)
   (assume (enum-type? type))
-  (let ((enum (finder type key)))
-    (assume (enum? enum))
-    (proc enum)))
+  (cond ((finder type key) => proc)
+        (else (error "no enum found" type key))))
 
 (define (enum-name->ordinal type name)
   (assume (symbol? name))
@@ -222,54 +220,98 @@
   (type enum-set-type)
   (mapping enum-set-mapping))
 
-(define (%enum-list->enum-set type enums)
+(define (enum-empty-set type)
+  (assume (enum-type? type))
+  (make-enum-set type (mapping (enum-type-comparator type))))
+
+(define (enum-type->enum-set type)
+  (assume (enum-type? type))
+  (list->enum-set type (enum-type-enums type)))
+
+(define (enum-set type . enums) (list->enum-set type enums))
+
+(define (list->enum-set type enums)
+  (assume (or (pair? enums) (null? enums)))
   (make-enum-set
    type
    (mapping-unfold null?
                    (lambda (enums)
                      (let ((enum (car enums)))
-                       (assume (enum-type-contains? type enum))
+                       (assume (%well-typed-enum? type enum) "invalid argument")
                        (values (enum-ordinal enum) enum)))
                    cdr
                    enums
                    real-comparator)))
 
-(define (enum-type->enum-set type)
-  (assume (enum-type? type))
-  (%enum-list->enum-set type (enum-type-enums type)))
-
-(define (enum-set . enums) (list->enum-set enums))
-
-(define (list->enum-set enums)
-  (assume (pair? enums))
-  (%enum-list->enum-set (enum-type (car enums)) enums))
-
-(define (enum-set-project type eset)
-  (assume (enum-type? type))
+;; Returns a set of enums drawn from the enum-type src with the same
+;; names as the enums of eset.
+(define (enum-set-projection src eset)
+  (assume (or (enum-type? src) (enum-set? src)))
   (assume (enum-set? eset))
-  (make-enum-set
-   type
-   (mapping-map (lambda (_ enum)
-                  (let ((enum* (enum-name->enum type (enum-name enum))))
-                    (values (enum-ordinal enum*) enum*)))
-                real-comparator
-                (enum-set-mapping eset))))
+  (let ((type (if (enum-type? src) src (enum-set-type src))))
+    (make-enum-set
+     type
+     (mapping-map (lambda (_ enum)
+                    (let ((enum* (enum-name->enum type (enum-name enum))))
+                      (values (enum-ordinal enum*) enum*)))
+                  real-comparator
+                  (enum-set-mapping eset)))))
 
 (define (enum-set-copy eset)
   (make-enum-set (enum-set-type eset)
                  (mapping-copy (enum-set-mapping eset))))
 
+;; [Deprecated]
+(define (make-enumeration names)
+  (enum-type->enum-set (make-enum-type names)))
+
+;; [Deprecated]
+(define (enum-set-universe eset)
+  (assume (enum-set? eset))
+  (enum-type->enum-set (enum-set-type eset)))
+
+;; [Deprecated]  Returns a procedure which takes a list of symbols
+;; and returns an enum set containing the corresponding enums.  This
+;; extracts the type of eset, but otherwise ignores this argument.
+(define (enum-set-constructor eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (lambda (names)
+      (list->enum-set type
+                      (map (lambda (sym) (enum-name->enum type sym))
+                           names)))))
+
+;; [Deprecated] Returns a procedure which takes a symbol and returns
+;; the corresponding enum ordinal or #f.  This doesn't make any use
+;; of eset, beyond pulling out its enum type.
+(define (enum-set-indexer eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (lambda (name)
+      (cond ((enum-name->enum type name) => enum-ordinal)
+            (else #f)))))
+
 ;;;; Enum set predicates
 
 (define (enum-set-contains? eset enum)
   (assume (enum-set? eset))
-  (assume (enum-type-contains? (enum-set-type eset) enum)
-          "enum-set-contains?: ill-typed enum")
-  (mapping-ref (enum-set-mapping eset)
-               (enum-ordinal enum)
-               (lambda () #f)
-               (lambda (result)
-                 (enum=? result enum))))
+  (assume (%well-typed-enum? (enum-set-type eset) enum)
+          "enum-set-contains?: invalid argument")
+  (and (mapping-ref/default (enum-set-mapping eset)
+                            (enum-ordinal enum)
+                            #f)
+       #t))
+
+;; FIXME: Avoid double (type, then set) lookup.
+(define (enum-set-member? name eset)
+  (assume (symbol? name))
+  (assume (enum-set? eset))
+  (let ((enum (enum-name->enum (enum-set-type eset) name)))
+    (assume enum "enum-set-member?: invalid enum name" name eset)
+    (and (mapping-ref/default (enum-set-mapping eset)
+                              (enum-ordinal enum)
+                              #f)
+         #t)))
 
 (define (%enum-set-type=? eset1 eset2)
   (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
@@ -307,6 +349,9 @@
 (define (enum-set>=? eset1 eset2)
   (%compare-enum-sets mapping>=? eset1 eset2))
 
+(define (enum-set-subset? eset1 eset2)
+  (enum-set<=? eset1 eset2))
+
 (define (enum-set-any? pred eset)
   (assume (enum-set? eset))
   (mapping-any? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
@@ -317,20 +362,44 @@
 
 ;;;; Enum set mutators
 
+(define (enum-set-adjoin eset . enums)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (fold (lambda (enum mapping)
+             (assume (%well-typed-enum? type enum)
+                     "enum-set-adjoin: invalid argument")
+             (mapping-adjoin mapping (enum-ordinal enum) enum))
+           (enum-set-mapping eset)
+           enums))))
+
 (define (enum-set-adjoin! eset . enums)
   (assume (enum-set? eset))
   (let ((type (enum-set-type eset)))
     (make-enum-set
      type
      (fold (lambda (enum mapping)
-             (assume (%enum-type-contains?/no-check type enum))
+             (assume (%well-typed-enum? type enum)
+                     "enum-set-adjoin!: invalid argument")
              (mapping-adjoin! mapping (enum-ordinal enum) enum))
            (enum-set-mapping eset)
            enums))))
 
+(define (enum-set-delete eset . enums)
+  (assume (enum-set? eset))
+  (enum-set-delete-all eset enums))
+
 (define (enum-set-delete! eset . enums)
   (assume (enum-set? eset))
   (enum-set-delete-all! eset enums))
+
+(define (enum-set-delete-all eset enum-lis)
+  (assume (enum-set? eset))
+  (make-enum-set
+   (enum-set-type eset)
+   (mapping-delete-all (enum-set-mapping eset)
+                       (map enum-ordinal enum-lis))))
 
 (define (enum-set-delete-all! eset enum-lis)
   (assume (enum-set? eset))
@@ -388,7 +457,7 @@
 
 ;;;; Enum set logical operations
 
-(define (%enum-set-logical-op! proc eset1 eset2)
+(define (%enum-set-logical-op proc eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
@@ -396,14 +465,84 @@
    (enum-set-type eset1)
    (proc (enum-set-mapping eset1) (enum-set-mapping eset2))))
 
+(define (enum-set-union eset1 eset2)
+  (%enum-set-logical-op mapping-union eset1 eset2))
+
+(define (enum-set-intersection eset1 eset2)
+  (%enum-set-logical-op mapping-intersection eset1 eset2))
+
+(define (enum-set-difference eset1 eset2)
+  (%enum-set-logical-op mapping-difference eset1 eset2))
+
+(define (enum-set-xor eset1 eset2)
+  (%enum-set-logical-op mapping-xor eset1 eset2))
+
 (define (enum-set-union! eset1 eset2)
-  (%enum-set-logical-op! mapping-union! eset1 eset2))
+  (%enum-set-logical-op mapping-union! eset1 eset2))
 
 (define (enum-set-intersection! eset1 eset2)
-  (%enum-set-logical-op! mapping-intersection! eset1 eset2))
+  (%enum-set-logical-op mapping-intersection! eset1 eset2))
 
 (define (enum-set-difference! eset1 eset2)
-  (%enum-set-logical-op! mapping-difference! eset1 eset2))
+  (%enum-set-logical-op mapping-difference! eset1 eset2))
 
 (define (enum-set-xor! eset1 eset2)
-  (%enum-set-logical-op! mapping-xor! eset1 eset2))
+  (%enum-set-logical-op mapping-xor! eset1 eset2))
+
+(define (enum-set-complement eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (mapping-difference (enum-set-mapping (enum-set-universe eset))
+                         (enum-set-mapping eset)))))
+
+(define (enum-set-complement! eset)
+  (assume (enum-set? eset))
+  (let ((type (enum-set-type eset)))
+    (make-enum-set
+     type
+     (mapping-difference! (enum-set-mapping (enum-set-universe eset))
+                          (enum-set-mapping eset)))))
+
+;;;; Syntax
+
+;; Defines a new enum-type T, binds type-name to a macro which
+;; takes a symbol to an enum in T, and binds constructor to a
+;; macro taking symbols to an enum set of type T.
+(define-syntax define-enum
+  (syntax-rules ()
+    ((_ type-name (name-val ...) constructor)
+     (begin
+      (define etype (make-enum-type '(name-val ...)))
+      (define-syntax type-name
+        (syntax-rules ()
+          ((_ name)
+           (enum-name->enum etype 'name))))
+      (define-syntax constructor
+        (syntax-rules ()
+          ((_ . names)
+           (list->enum-set etype
+                           (map (lambda (s)
+                                  (enum-name->enum etype s))
+                                'names)))))))))
+
+;; [Deprecated] As define-enum, except that type-name is bound to
+;; a macro that returns its symbol argument if the corresponding
+;; enum is in the new type.
+(define-syntax define-enumeration
+  (syntax-rules ()
+    ((_ type-name (name-val ...) constructor)
+     (begin
+      (define etype (make-enum-type '(name-val ...)))
+      (define-syntax type-name
+        (syntax-rules ()
+          ((_ name)
+           (and (enum-name->enum etype 'name) 'name))))
+      (define-syntax constructor
+        (syntax-rules ()
+          ((_ . names)
+           (list->enum-set etype
+                           (map (lambda (s)
+                                  (enum-name->enum etype s))
+                                'names)))))))))
