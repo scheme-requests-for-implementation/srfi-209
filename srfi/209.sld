@@ -64,6 +64,8 @@
           enum-set-complement!
 
           make-enum-comparator
+
+          define-enum
           )
 
   (include "209.scm"))

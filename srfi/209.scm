@@ -499,3 +499,22 @@
      type
      (mapping-difference! (enum-set-mapping (enum-set-universe eset))
                           (enum-set-mapping eset)))))
+
+;;;; Syntax
+
+(define-syntax define-enum
+  (syntax-rules ()
+    ((_ type-name (name-val ...) constructor)
+     (begin
+      (define etype (make-enum-type '(name-val ...)))
+      (define-syntax type-name
+        (syntax-rules ()
+          ((_ name)
+           (enum-name->enum etype name))))
+      (define-syntax constructor
+        (syntax-rules ()
+          ((_ . names)
+           (list->enum-set etype
+                           (map (lambda (s)
+                                  (enum-name->enum etype s))
+                                'names)))))))))
