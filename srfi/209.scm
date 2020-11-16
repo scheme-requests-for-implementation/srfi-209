@@ -518,3 +518,23 @@
                            (map (lambda (s)
                                   (enum-name->enum etype s))
                                 'names)))))))))
+
+;; [Deprecated] As define-enum, except that type-name is bound to
+;; a macro that returns its symbol argument if the corresponding
+;; enum is in the new type.
+(define-syntax define-enumeration
+  (syntax-rules ()
+    ((_ type-name (name-val ...) constructor)
+     (begin
+      (define etype (make-enum-type '(name-val ...)))
+      (define-syntax type-name
+        (syntax-rules ()
+          ((_ name)
+           (and (enum-name->enum etype 'name) 'name))))
+      (define-syntax constructor
+        (syntax-rules ()
+          ((_ . names)
+           (list->enum-set etype
+                           (map (lambda (s)
+                                  (enum-name->enum etype s))
+                                'names)))))))))

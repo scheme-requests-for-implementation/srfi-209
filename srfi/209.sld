@@ -66,6 +66,7 @@
           make-enum-comparator
 
           define-enum
+          define-enumeration
           )
 
   (include "209.scm"))
