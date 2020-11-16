@@ -35,14 +35,10 @@
           enum-next enum-prev
 
           enum-type->enum-set enum-set list->enum-set enum-set-projection
-          enum-set-copy
-          enum-empty-set
-          make-enumeration enum-set-universe enum-set-constructor
-          enum-set-type
-          enum-set-indexer
+          enum-set-copy enum-empty-set make-enumeration enum-set-universe
+          enum-set-constructor enum-set-type enum-set-indexer
 
-          enum-set? enum-set-contains? enum-set=?
-          enum-set-member?
+          enum-set? enum-set-contains? enum-set=? enum-set-member?
           enum-set-empty? enum-set-disjoint? enum-set<? enum-set>?
           enum-set<=? enum-set>=? enum-set-any? enum-set-every?
           enum-set-subset?
@@ -51,21 +47,16 @@
           enum-set-adjoin enum-set-delete enum-set-delete-all
 
           enum-set-size enum-set->list enum-set-map->list enum-set-for-each
-          enum-set-filter enum-set-remove
-          enum-set-count
-          enum-set-fold
+          enum-set-filter enum-set-remove enum-set-count enum-set-fold
 
           enum-set-union enum-set-intersection enum-set-difference
-          enum-set-xor
-          enum-set-complement
-          enum-set-union! enum-set-intersection! enum-set-difference!
-          enum-set-xor!
+          enum-set-xor enum-set-complement enum-set-union!
+          enum-set-intersection! enum-set-difference! enum-set-xor!
           enum-set-complement!
 
           make-enum-comparator
 
-          define-enum
-          define-enumeration
+          define-enum define-enumeration
           )
 
   (include "209.scm"))
