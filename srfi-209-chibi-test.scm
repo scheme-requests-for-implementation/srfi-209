@@ -245,6 +245,9 @@
   (test-not (enum-set-contains? (enum-set color color-red color-blue)
                                 color-tangerine))
 
+  (test-assert (eqv? (enum-set-type color-set) color))
+  (test-assert (eqv? (enum-set-type (enum-type->enum-set pizza)) pizza))
+
   (test-assert (enum-set-empty? (enum-empty-set pizza)))
 
   (test-assert (enum-set-empty? empty-colors))
@@ -405,6 +408,11 @@
 
   (test-assert (enum-set-member? 'red reddish))
   (test-not (enum-set-member? 'blue reddish))
+
+  (let ((idx (enum-set-indexer reddish)))
+    (test 0 (idx 'red))
+    (test 4 (idx 'green))
+    (test-not (idx 'margherita)))
 )
 
 (test-group "Enum set logical operations"
@@ -433,4 +441,19 @@
                 (enum-set-complement! (enum-set-copy color-set))))
   (test-assert (enum-set=?
                 (enum-set-complement! (enum-set-copy reddish)) ~reddish))
+)
+
+(test-group "Syntax"
+  (define-enum hobbit (frodo sam merry pippin) hobbit-set)
+  (define-enumeration wizard (gandalf saruman radagast) wizard-set)
+
+  (test 'merry (enum-name (hobbit merry)))
+  (test-assert (enum-set? (hobbit-set)))
+  (test-assert (enum-set-empty? (hobbit-set)))
+  (test-assert (enum-set-contains? (hobbit-set merry pippin) (hobbit pippin)))
+
+  (test 'radagast (wizard radagast))
+  (test-assert (enum-set? (wizard-set)))
+  (test-assert (enum-set-empty? (wizard-set)))
+  (test-assert (enum-set-member? (wizard gandalf) (wizard-set saruman gandalf)))
 )

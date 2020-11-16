@@ -309,6 +309,9 @@
                              color-tangerine)
    => #f)
 
+  (check (eqv? (enum-set-type color-set) color) => #t)
+  (check (eqv? (enum-set-type (enum-type->enum-set pizza)) pizza) => #t)
+
   (check (enum-set-empty? (enum-empty-set pizza)) => #t)
 
   (check (enum-set-empty? empty-colors) => #t)
@@ -470,6 +473,8 @@
                         color-set)
    => (reverse color-names))
 
+  (check (enum-set=? color-set (enum-set-universe reddish)) => #t)
+
   (let* ((ds '((red "stop") (yellow "floor it!") (green "go")))
          (us-traffic-light (make-enumeration ds))
          (light-type (enum-set-type us-traffic-light)))
@@ -484,6 +489,11 @@
 
   (check (enum-set-member? 'red reddish) => #t)
   (check (enum-set-member? 'blue reddish) => #f)
+
+  (let ((idx (enum-set-indexer reddish)))
+    (check (idx 'red)        => 0)
+    (check (idx 'green)      => 4)
+    (check (idx 'margherita) => #f))
 )
 
 (define (check-enum-set-logical)
@@ -519,6 +529,25 @@
    => #t)
 )
 
+(define (check-syntax)
+  (print-header "Running syntax tests...")
+
+  (define-enum hobbit (frodo sam merry pippin) hobbit-set)
+  (define-enumeration wizard (gandalf saruman radagast) wizard-set)
+
+  (check (enum-name (hobbit merry)) => 'merry)
+  (check (enum-set? (hobbit-set)) => #t)
+  (check (enum-set-empty? (hobbit-set)) => #t)
+  (check (enum-set-contains? (hobbit-set merry pippin) (hobbit pippin))
+   => #t)
+
+  (check (wizard radagast) => 'radagast)
+  (check (enum-set? (wizard-set)) => #t)
+  (check (enum-set-empty? (wizard-set)) => #t)
+  (check (enum-set-member? (wizard gandalf) (wizard-set saruman gandalf))
+   => #t)
+)
+
 (define (check-all)
   (check-finders-and-enum-accessors)
   (check-type-constructor)
@@ -531,6 +560,7 @@
   (check-enum-set-mutators)
   (check-enum-set-operations)
   (check-enum-set-logical)
+  (check-syntax)
 
   (check-report))
 
