@@ -329,9 +329,10 @@ need not be not the same as <em>enum-type</em>.</p>
 <p><small><code>(make-enumeration</code>&nbsp;<em>symbol-list</em><code>)</code></small>
 </p>
 <p><small>Creates a newly allocated enum type.
-The names and values of its enums are the members of
+The names are the members of
 <em>symbol-list</em>, and they appear in the enum set
 in the order given by the list.
+The values are the same as the names.
 Then an enum set containing all the enums of this
 enum type is newly allocated and returned.
 The enum type can be retrieved with <code>enum-set-type</code>.
@@ -343,11 +344,11 @@ enum set containing all the enums of the enum type.</small></p>
 <p><small><code>(enum-set-constructor</code>&nbsp;<em>enum-set</em><code>)</code></small>
 </p>
 <p><small>Returns a procedure that accepts one argument, a list of symbols.
-Returns a newly allocated enum set containing the enums whose names are
+This procedure returns a newly allocated enum set
+containing the enums whose names are
 members of the list of symbols.
 It is an error if any of the symbols is not the name of an enum in the
 enum type associated with <em>enum-set</em>.
-in <em>enum-set</em>, then the ordinal of that enum is returned.
 Otherwise, <code>#f</code> is returned.</small></p>
 <h3 id="enum-set-predicates">Enum set predicates</h3>
 <p><code>(enum-set?</code>&nbsp;<em>obj</em><code>)</code></p>
@@ -413,14 +414,23 @@ to the same type.</p>
 <p><code>(enum-set-subset?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code></p>
 <p> Let <em>enum-type-1</em> and <em>enum-type-2</em>
 be the enum types of <em>enum-set-1</em> and <em>enum-set-2</em>
+respectively,
+and let <em>enum-type-symbols-1</em> and <em>enum-type-symbols-2</em> be lists
+of the names of enums in <em>enum-type-1</em> and <em>enum-type-2</em>
 respectively.
-Then, if the names of the enums in <em>enum-type-1</em> do not constitute
-a subset of the names of the enums in <em>enum-type-2</em>,
-return <code>#f</code>.
-Likewise, if the names of the enums in <em>enum-set-1</em> do not constitute
+Then, if any symbol in <em>enum-type-symbols-2</em> does not also appear
+in <em>enum-type-symbols-1</em>,
+return <code>#f</code>.</p>
+<p>Likewise, let <em>enum-set-symbols-1</em> and <em>enum-set-symbols-2</em>
+be lists of the names of the enums in <em>enum-set-1</em> and <em>enum-set-2</em>
+respectively.
+Then, if any symbol in <em>enum-set-symbols-2</em>
+is not a member of in <em>enum-set-symbols-1</em>
 a subset of the names of the enums in <em>enum-set-2</em>,
 return <code>#f</code>.
 Otherwise return <code>#t</code>.</p>
+<p>(Note that this relationship can be computed without actually constructing
+the lists of symbols.)
 <p><code>(enum-set-any?</code>&nbsp;<em>pred enum-set</em><code>)</code><br/>
 <code>(enum-set-every?</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
 <p>Returns <code>#t</code> if any/every application of <em>proc</em>
@@ -489,7 +499,7 @@ the <em>enums</em>.</p>
 the members of <em>list</em>.</p>
 <pre class="example"><code>(define empty-colors
   (enum-set-delete-all! (enum-set-copy color-set)
-                        (enum-set-&gt;list color-set)))
+                        (enum-set-&gt;enum-list color-set)))
 
 (enum-set&lt;? empty-colors reddish) &rArr; #t
 (enum-set-empty? empty-colors) &rArr; #t
@@ -499,10 +509,14 @@ the members of <em>list</em>.</p>
 <p>Returns the number of elements in <em>enum-set</em>.</p>
 <pre class="example"><code>(enum-set-size (enum-set color-red color-blue)) &rArr; 2
 </code></pre>
-<p><code>(enum-set-&gt;list</code>&nbsp;<em>enum-set</em><code>)</code></p>
-<p>Returns a list containing the members of <em>enum-set</em>.</p>
-<pre class="example"><code>(map enum-name (enum-set-&gt;list reddish)) &rArr; (red orange)
-(list-&gt;enum-set (enum-set-&gt;list color-set)) &rArr; color-set
+<p><code>(enum-set-&gt;enum-list</code>&nbsp;<em>enum-set</em><code>)</code><br/>
+<small><code>(enum-set-&gt;list</code>&nbsp;<em>enum-set</em><code>)</code></p></small>
+returns a list containing the members of <em>enum-set</em>, whereas
+the <code>set-&gt;enum-list</code> procedure
+returns a list containing the names of the members of <em>enum-set</em>.
+In either case, the list will be in increasing order of the enums.</p>
+<pre class="example"><code>(map enum-name (enum-set-&gt;enum-list reddish)) &rArr; (red orange)
+(list-&gt;enum-set (enum-set-&gt;enum-list color-set)) &rArr; color-set
 </code></pre>
 <p><code>(enum-set-count</code>&nbsp;<em>pred enum-set</em><code>)</code></p>
 <p>Returns an exact integer, the number of elements of <em>enum-set</em>
@@ -541,7 +555,7 @@ the current state, setting the current state to the result. The algorithm is
 repeated until all the elements of <em>enum-set</em> have been processed. Then
 the current state is returned.</p>
 <pre class="example"><code>(enum-set-fold cons '() color-set)
- = (reverse (enum-set-&gt;list color-set))
+ = (reverse (enum-set-&gt;enum-list color-set))
 </code></pre>
 <h3 id="enum-set-logical-operations">Enum set logical operations</h3>
 <p>These procedures come in pairs.
@@ -620,11 +634,13 @@ of an enum.</p>
 When &lt;type-name&gt; is invoked as <code>(</code>&lt;type-name&gt; &lt;symbol&gt;<code>)</code>,
 it returns the enum named &lt;symbol&gt; in the case of <code>define-enum</code>
 or the symbol itself in the case of <code>define-enumeration</code>.
+If the symbol does not name any enum of the enum-type, an error is signaled.
 <p>
 &lt;Constructor-syntax&gt; is an identifier that is bound to a
 macro that, given any finite sequence of the names of enums,
 possibly with duplicates, expands into an expression that evaluates
 to an enum set of those enums.</p>
+If any of the symbols does not name any enum of the enum-type, an error is signaled.
 <h2>Implementation</h2>
 
 The implementation of this SRFI is in its repository
