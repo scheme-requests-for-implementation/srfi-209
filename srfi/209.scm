@@ -111,8 +111,6 @@
             "invalid arguments")
     (apply compare (enum-type-comparator type) enums)))
 
-;; enum=? will probably see the most use out of the various enum
-;; comparisons, so we provide a two-argument fast path.
 (define (enum=? enum1 enum2 . enums)
   (assume (enum? enum1))
   (let* ((type (enum-type enum1))
@@ -245,6 +243,8 @@
                    enums
                    real-comparator)))
 
+;; Returns a set of enums drawn from the enum-type src with the same
+;; names as the enums of eset.
 (define (enum-set-projection src eset)
   (assume (or (enum-type? src) (enum-set? src)))
   (assume (enum-set? eset))
@@ -261,13 +261,18 @@
   (make-enum-set (enum-set-type eset)
                  (mapping-copy (enum-set-mapping eset))))
 
+;; [Deprecated]
 (define (make-enumeration names)
   (enum-type->enum-set (make-enum-type names)))
 
+;; [Deprecated]
 (define (enum-set-universe eset)
   (assume (enum-set? eset))
   (enum-type->enum-set (enum-set-type eset)))
 
+;; [Deprecated]  Returns a procedure which takes a list of symbols
+;; and returns an enum set containing the corresponding enums.  This
+;; extracts the type of eset, but otherwise ignores this argument.
 (define (enum-set-constructor eset)
   (assume (enum-set? eset))
   (let ((type (enum-set-type eset)))
@@ -502,6 +507,9 @@
 
 ;;;; Syntax
 
+;; Defines a new enum-type T, binds type-name to a macro which
+;; takes a symbol to an enum in T, and binds constructor to a
+;; macro taking symbols to an enum set of type T.
 (define-syntax define-enum
   (syntax-rules ()
     ((_ type-name (name-val ...) constructor)
