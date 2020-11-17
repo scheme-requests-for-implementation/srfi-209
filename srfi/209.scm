@@ -351,12 +351,20 @@
   (enum-set<=? eset1 eset2))
 
 (define (enum-set-any? pred eset)
-  (assume (enum-set? eset))
-  (mapping-any? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
+  (assume (procedure? pred))
+  (call-with-current-continuation
+   (lambda (return)
+     (enum-set-fold (lambda (e _) (and (pred e) (return #t)))
+                    #f
+                    eset))))
 
 (define (enum-set-every? pred eset)
-  (assume (enum-set? eset))
-  (mapping-every? (lambda (_ enum) (pred enum)) (enum-set-mapping eset)))
+  (assume (procedure? pred))
+  (call-with-current-continuation
+   (lambda (return)
+     (enum-set-fold (lambda (e _) (or (pred e) (return #f)))
+                    #t
+                    eset))))
 
 ;;;; Enum set mutators
 
@@ -413,18 +421,15 @@
 
 (define (enum-set->list eset)
   (assume (enum-set? eset))
-  (mapping-values (enum-set-mapping eset)))
+  (enum-set-fold cons '() eset))
 
 (define (enum-set-map->list proc eset)
   (assume (procedure? proc))
-  (assume (enum-set? eset))
-  (mapping-map->list (lambda (_ enum) (proc enum))
-                     (enum-set-mapping eset)))
+  (enum-set-fold (lambda (e res) (cons (proc e) res)) '() eset))
 
 (define (enum-set-count pred eset)
-  (assume (enum-set? eset))
-  (mapping-count (lambda (_ enum) (pred enum))
-                 (enum-set-mapping eset)))
+  (assume (procedure? pred))
+  (enum-set-fold (lambda (e n) (if (pred e) (+ n 1) n)) 0 eset))
 
 (define (enum-set-filter pred eset)
   (assume (enum-set? eset))
@@ -440,17 +445,23 @@
 
 (define (enum-set-for-each proc eset)
   (assume (procedure? proc))
-  (assume (enum-set? eset))
-  (mapping-for-each (lambda (_ enum) (proc enum))
-                    (enum-set-mapping eset)))
+  (enum-set-fold (lambda (e _) (proc e)) '() eset))
 
+;; TODO: Optimize this.
 (define (enum-set-fold proc nil eset)
   (assume (procedure? proc))
   (assume (enum-set? eset))
-  (mapping-fold (lambda (_ enum state)
-                  (proc enum state))
-                nil
-                (enum-set-mapping eset)))
+  (let ((type (enum-set-type eset))
+        (bitmap (enum-set-bitmap eset)))
+    (cadr
+     (fold-right (lambda (b p)
+                   (let ((i (car p)) (state (cadr p)))
+                     (if b
+                         (list (- i 1)
+                               (proc (enum-ordinal->enum type i) state))
+                         (list (- i 1) state))))
+                 (list (- (integer-length bitmap) 1) nil)
+                 (bits->list bitmap)))))
 
 ;;;; Enum set logical operations
 
