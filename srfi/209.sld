@@ -1,5 +1,6 @@
 (define-library (srfi 209)
   (import (scheme base)
+          (scheme case-lambda)
           (srfi 1)
           (srfi 128)
           (srfi 151)
