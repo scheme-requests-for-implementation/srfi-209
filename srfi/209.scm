@@ -377,28 +377,41 @@
         (enum-set-bitmap eset)
         enums))
 
-(define (enum-set-adjoin eset . enums)
-  (assume (enum-set? eset))
-  (let ((type (enum-set-type eset)))
-    (make-enum-set
-     type
-     (fold (lambda (enum b)
-             (assume (%well-typed-enum? type enum)
-                     "enum-set-adjoin: invalid argument")
-             (bitwise-ior b (expt 2 (enum-ordinal enum))))
-           (enum-set-bitmap eset)
-           enums))))
+(define enum-set-adjoin
+  (case-lambda
+    ((eset enum)                 ; fast path
+     (assume (enum-set? eset))
+     (let ((type (enum-set-type eset)))
+       (assume (%well-typed-enum? type enum)
+               "enum-set-adjoin: invalid argument"
+               enum)
+       (make-enum-set
+        type
+        (bitwise-ior (enum-set-bitmap eset)
+                     (expt 2 (enum-ordinal enum))))))
+    ((eset . enums)              ; variadic path
+     (assume (enum-set? eset))
+     (let ((type (enum-set-type eset)))
+       (make-enum-set
+        type
+        (bitwise-ior (enum-set-bitmap eset)
+                     (%enum-list->bitmap type enums)))))))
 
-(define (enum-set-adjoin! eset . enums)
-  (assume (enum-set? eset))
-  (set-enum-set-bitmap!
-   eset
-   (fold (lambda (enum b)
-           (assume (%well-typed-enum? type enum)
-                   "enum-set-adjoin: invalid argument")
-           (bitwise-ior b (expt 2 (enum-ordinal enum))))
-         (enum-set-bitmap eset)
-         enums)))
+(define enum-set-adjoin!
+  (case-lambda
+    ((eset enum)                 ; fast path
+     (assume (enum-set? eset))
+     (assume (%well-typed-enum? (enum-set-type eset) enum))
+     (set-enum-set-bitmap!
+      eset
+      (bitwise-ior (enum-set-bitmap eset)
+                   (expt 2 (enum-ordinal enum)))))
+    ((eset . enums)              ; variadic path
+     (assume (enum-set? eset))
+     (set-enum-set-bitmap!
+      eset
+      (bitwise-ior (enum-set-bitmap eset)
+                   (%enum-list->bitmap (enum-set-type eset) enums))))))
 
 (define enum-set-delete
   (case-lambda
