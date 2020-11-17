@@ -226,7 +226,7 @@
 
 (define (enum-type->enum-set type)
   (assume (enum-type? type))
-  (list->enum-set type (enum-type-enums type)))
+  (make-enum-set type (- (expt 2 (enum-type-size type)) 1)))
 
 (define (enum-set type . enums) (list->enum-set type enums))
 
@@ -293,7 +293,8 @@
   (assume (enum-set? eset))
   (assume (%well-typed-enum? (enum-set-type eset) enum)
           "enum-set-contains?: invalid argument")
-  (not (zero? (bitwise-and (enum-set-bitmap eset) (enum-ordinal enum)))))
+  (not (zero? (bitwise-and (enum-set-bitmap eset)
+                           (expt 2 (enum-ordinal enum))))))
 
 ;; FIXME: Avoid double (type, then set) lookup.
 (define (enum-set-member? name eset)
@@ -315,28 +316,36 @@
   (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
   (zero? (bitwise-and (enum-set-bitmap eset1) (enum-set-bitmap eset2))))
 
-(define (%compare-enum-sets compare eset1 eset2)
-  (assume (enum-set? eset1))
-  (assume (enum-set? eset2))
-  (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
-  (compare (enum-type-comparator (enum-set-type eset1))
-           (enum-set-mapping eset1)
-           (enum-set-mapping eset2)))
-
 (define (enum-set=? eset1 eset2)
-  (%compare-enum-sets mapping=? eset1 eset2))
+  (= (enum-set-bitmap eset1) (enum-set-bitmap eset2)))
 
 (define (enum-set<? eset1 eset2)
-  (%compare-enum-sets mapping<? eset1 eset2))
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (not (zero? (bitwise-andc1 (enum-set-bitmap eset1)
+                             (enum-set-bitmap eset2)))))
 
 (define (enum-set>? eset1 eset2)
-  (%compare-enum-sets mapping>? eset1 eset2))
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (not (zero? (bitwise-andc2 (enum-set-bitmap eset1)
+                             (enum-set-bitmap eset2)))))
 
 (define (enum-set<=? eset1 eset2)
-  (%compare-enum-sets mapping<=? eset1 eset2))
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (zero? (bitwise-andc2 (enum-set-bitmap eset1)
+                        (enum-set-bitmap eset2))))
 
 (define (enum-set>=? eset1 eset2)
-  (%compare-enum-sets mapping>=? eset1 eset2))
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (zero? (bitwise-andc1 (enum-set-bitmap eset1)
+                        (enum-set-bitmap eset2))))
 
 (define (enum-set-subset? eset1 eset2)
   (enum-set<=? eset1 eset2))
@@ -400,7 +409,7 @@
 
 (define (enum-set-size eset)
   (assume (enum-set? eset))
-  (mapping-size (enum-set-mapping eset)))
+  (bit-count (enum-set-bitmap eset)))
 
 (define (enum-set->list eset)
   (assume (enum-set? eset))
@@ -451,47 +460,48 @@
   (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
   (make-enum-set
    (enum-set-type eset1)
-   (proc (enum-set-mapping eset1) (enum-set-mapping eset2))))
+   (proc (enum-set-bitmap eset1) (enum-set-bitmap eset2))))
+
+(define (%enum-set-logical-op! proc eset1 eset2)
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
+  (set-enum-set-bitmap! eset1
+                        (proc (enum-set-bitmap eset1)
+                              (enum-set-bitmap eset2)))
+  eset1)
 
 (define (enum-set-union eset1 eset2)
-  (%enum-set-logical-op mapping-union eset1 eset2))
+  (%enum-set-logical-op bitwise-ior eset1 eset2))
 
 (define (enum-set-intersection eset1 eset2)
-  (%enum-set-logical-op mapping-intersection eset1 eset2))
+  (%enum-set-logical-op bitwise-and eset1 eset2))
 
 (define (enum-set-difference eset1 eset2)
-  (%enum-set-logical-op mapping-difference eset1 eset2))
+  (%enum-set-logical-op bitwise-andc2 eset1 eset2))
 
 (define (enum-set-xor eset1 eset2)
-  (%enum-set-logical-op mapping-xor eset1 eset2))
+  (%enum-set-logical-op bitwise-xor eset1 eset2))
 
 (define (enum-set-union! eset1 eset2)
-  (%enum-set-logical-op mapping-union! eset1 eset2))
+  (%enum-set-logical-op! bitwise-ior eset1 eset2))
 
 (define (enum-set-intersection! eset1 eset2)
-  (%enum-set-logical-op mapping-intersection! eset1 eset2))
+  (%enum-set-logical-op! bitwise-and eset1 eset2))
 
 (define (enum-set-difference! eset1 eset2)
-  (%enum-set-logical-op mapping-difference! eset1 eset2))
+  (%enum-set-logical-op! bitwise-andc2 eset1 eset2))
 
 (define (enum-set-xor! eset1 eset2)
-  (%enum-set-logical-op mapping-xor! eset1 eset2))
+  (%enum-set-logical-op! bitwise-xor eset1 eset2))
 
 (define (enum-set-complement eset)
   (assume (enum-set? eset))
-  (let ((type (enum-set-type eset)))
-    (make-enum-set
-     type
-     (mapping-difference (enum-set-mapping (enum-set-universe eset))
-                         (enum-set-mapping eset)))))
+  (%enum-set-logical-op bitwise-andc1 eset (enum-set-universe eset)))
 
 (define (enum-set-complement! eset)
   (assume (enum-set? eset))
-  (let ((type (enum-set-type eset)))
-    (make-enum-set
-     type
-     (mapping-difference! (enum-set-mapping (enum-set-universe eset))
-                          (enum-set-mapping eset)))))
+  (%enum-set-logical-op! bitwise-andc1 eset (enum-set-universe eset)))
 
 ;;;; Syntax
 
