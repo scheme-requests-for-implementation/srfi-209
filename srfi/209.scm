@@ -474,17 +474,37 @@
   (assume (procedure? pred))
   (enum-set-fold (lambda (e n) (if (pred e) (+ n 1) n)) 0 eset))
 
+;; TODO: Optimize this.
 (define (enum-set-filter pred eset)
   (assume (enum-set? eset))
-  (make-enum-set (enum-set-type eset)
-                 (mapping-filter (lambda (_ enum) (pred enum))
-                                 (enum-set-mapping eset))))
+  (let ((type (enum-set-type eset))
+        (bitmap (enum-set-bitmap eset)))
+    (make-enum-set
+     type
+     (fold (lambda (p m)
+             (let ((i (car p)) (b (cadr p)))
+               (if (and b (pred (enum-ordinal->enum type i)))
+                   (bitwise-ior m (expt 2 i))
+                   m)))
+           0
+           (zip (iota (integer-length bitmap))
+                (bits->list bitmap))))))
 
+;; TODO: Optimize this.
 (define (enum-set-remove pred eset)
   (assume (enum-set? eset))
-  (make-enum-set (enum-set-type eset)
-                 (mapping-remove (lambda (_ enum) (pred enum))
-                                 (enum-set-mapping eset))))
+  (let ((type (enum-set-type eset))
+        (bitmap (enum-set-bitmap eset)))
+    (make-enum-set
+     type
+     (fold (lambda (p m)
+             (let ((i (car p)) (b (cadr p)))
+               (if (and b (pred (enum-ordinal->enum type i)))
+                   m
+                   (bitwise-ior m (expt 2 i)))))
+           0
+           (zip (iota (integer-length bitmap))
+                (bits->list bitmap))))))
 
 (define (enum-set-for-each proc eset)
   (assume (procedure? proc))
