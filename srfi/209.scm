@@ -215,7 +215,7 @@
 ;;;; Enum set constructors
 
 (define-record-type <enum-set>
-  (make-enum-set type mapping)
+  (make-enum-set type bitmap)
   enum-set?
   (type enum-set-type)
   (bitmap enum-set-bitmap set-enum-set-bitmap!))
