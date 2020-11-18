@@ -336,7 +336,8 @@
     (test-not    (enum-set-contains? reddish** color-tangerine)))
 
   (test-assert (enum-set-empty?
-                (enum-set-delete-all! color-set (enum-type-enums color))))
+                (enum-set-delete-all! (enum-set-copy color-set)
+                                      (enum-type-enums color))))
 )
 
 (test-group "Derived enum set operations"

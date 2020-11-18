@@ -405,7 +405,8 @@
     (check (enum-set-contains? reddish** color-tangerine) => #f))
 
   (check (enum-set-empty?
-          (enum-set-delete-all! color-set (enum-type-enums color)))
+          (enum-set-delete-all! (enum-set-copy color-set)
+                                (enum-type-enums color)))
    => #t)
 )
 
