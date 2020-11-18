@@ -474,12 +474,15 @@
 
   (check (enum-set=? color-set (enum-set-universe reddish)) => #t)
 
-  (let* ((ds '((red "stop") (yellow "floor it!") (green "go")))
+  (let* ((ds '(red yellow green))
          (us-traffic-light (make-enumeration ds))
          (light-type (enum-set-type us-traffic-light)))
     (check (every (lambda (e) (enum-set-contains? us-traffic-light e))
-                  (map (lambda (p) (enum-name->enum light-type (car p)))
+                  (map (lambda (sym) (enum-name->enum light-type sym))
                        ds))
+     => #t)
+    (check (every (lambda (e) (eqv? (enum-name e) (enum-value e)))
+                  (enum-set->list us-traffic-light))
      => #t))
 
   (let ((color-con (enum-set-constructor reddish)))

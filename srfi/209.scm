@@ -257,7 +257,7 @@
 
 ;; [Deprecated]
 (define (make-enumeration names)
-  (enum-type->enum-set (make-enum-type names)))
+  (enum-type->enum-set (make-enum-type (zip names names))))
 
 ;; [Deprecated]
 (define (enum-set-universe eset)

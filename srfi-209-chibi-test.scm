@@ -392,12 +392,14 @@
 
   (test-assert (enum-set=? color-set (enum-set-universe reddish)))
 
-  (let* ((ds '((red "stop") (yellow "floor it!") (green "go")))
+  (let* ((ds '(red yellow green))
          (us-traffic-light (make-enumeration ds))
          (light-type (enum-set-type us-traffic-light)))
     (test-assert (every (lambda (e) (enum-set-contains? us-traffic-light e))
-                        (map (lambda (p) (enum-name->enum light-type (car p)))
-                             ds))))
+                        (map (lambda (sym) (enum-name->enum light-type sym))
+                             ds)))
+    (test-assert (every (lambda (e) (eqv? (enum-name e) (enum-value e)))
+                        (enum-set->list us-traffic-light))))
 
   (let ((color-con (enum-set-constructor reddish)))
     (test-assert (eqv? (enum-set-type (color-con '(green))) color))
