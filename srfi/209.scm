@@ -368,10 +368,9 @@
 ;; Fold a list of enums into a bitmap of their ordinals.
 (define (%enum-list->bitmap type enums)
   (fold (lambda (enum b)
-          (assume (%well-typed-enum? type enum)
-                  "enum-set-adjoin: invalid argument")
+          (assume (%well-typed-enum? type enum))
           (bitwise-ior b (expt 2 (enum-ordinal enum))))
-        (enum-set-bitmap eset)
+        0
         enums))
 
 (define enum-set-adjoin
