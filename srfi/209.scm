@@ -240,19 +240,16 @@
          0
          enums)))
 
-;; Returns a set of enums drawn from the enum-type src with the same
-;; names as the enums of eset.
+;; Returns a set of enums drawn from the enum-type/-set src with
+;; the same names as the enums of eset.
 (define (enum-set-projection src eset)
   (assume (or (enum-type? src) (enum-set? src)))
   (assume (enum-set? eset))
   (let ((type (if (enum-type? src) src (enum-set-type src))))
-    (make-enum-set
-     type
-     (mapping-map (lambda (_ enum)
-                    (let ((enum* (enum-name->enum type (enum-name enum))))
-                      (values (enum-ordinal enum*) enum*)))
-                  real-comparator
-                  (enum-set-mapping eset)))))
+    (list->enum-set
+     (enum-set-map->list (lambda (enum)
+                           (enum-name->enum type (enum-name enum)))
+                         eset))))
 
 (define (enum-set-copy eset)
   (make-enum-set (enum-set-type eset) (enum-set-bitmap eset)))
