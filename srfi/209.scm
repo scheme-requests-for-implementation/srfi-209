@@ -247,6 +247,7 @@
   (assume (enum-set? eset))
   (let ((type (if (enum-type? src) src (enum-set-type src))))
     (list->enum-set
+     type
      (enum-set-map->list (lambda (enum)
                            (enum-name->enum type (enum-name enum)))
                          eset))))
