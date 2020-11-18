@@ -433,7 +433,8 @@
        (set-enum-set-bitmap!
         eset
         (bitwise-andc2 (enum-set-bitmap eset)
-                       (expt 2 (enum-ordinal enum))))))
+                       (expt 2 (enum-ordinal enum))))
+       eset))
     ((eset . enums)             ; variadic path
      (enum-set-delete-all! eset enums))))
 
@@ -450,10 +451,12 @@
   (assume (or (pair? enums) (null? enums)))
   (if (null? enums)
       eset
-      (set-enum-set-bitmap!
-       eset
-       (bitwise-andc2 (enum-set-bitmap eset)
-                      (%enum-list->bitmap (enum-set-type eset) enums)))))
+      (begin
+       (set-enum-set-bitmap!
+        eset
+        (bitwise-andc2 (enum-set-bitmap eset)
+                       (%enum-list->bitmap (enum-set-type eset) enums)))
+       eset)))
 
 ;;;; Enum set operations
 
