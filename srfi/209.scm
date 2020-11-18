@@ -402,13 +402,15 @@
      (set-enum-set-bitmap!
       eset
       (bitwise-ior (enum-set-bitmap eset)
-                   (expt 2 (enum-ordinal enum)))))
+                   (expt 2 (enum-ordinal enum))))
+     eset)
     ((eset . enums)              ; variadic path
      (assume (enum-set? eset))
      (set-enum-set-bitmap!
       eset
       (bitwise-ior (enum-set-bitmap eset)
-                   (%enum-list->bitmap (enum-set-type eset) enums))))))
+                   (%enum-list->bitmap (enum-set-type eset) enums)))
+     eset)))
 
 (define enum-set-delete
   (case-lambda
