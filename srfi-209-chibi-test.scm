@@ -69,9 +69,7 @@
                          (enum-name->enum color ord))
                        (drop color-names 3))))
 
-(define empty-colors
-  (enum-set-delete-all! (enum-set-copy color-set)
-                        (enum-type-enums color)))
+(define empty-colors (enum-empty-set color))
 
 (define pizza-descriptions
   '((margherita "tomato and mozzarella")
@@ -253,9 +251,7 @@
   (test-assert (enum-set-empty? empty-colors))
   (test-not (enum-set-empty? color-set))
 
-  (test-assert
-   (enum-set=? (enum-set-projection (enum-type->enum-set color) reddish)
-               reddish))
+  (test-assert (enum-set=? (enum-set-projection color reddish) reddish))
   (let* ((color* (make-enum-type color-names))
          (reddish* (list->enum-set color*
                                    (map (lambda (name)
@@ -388,7 +384,7 @@
                              color-set)
           n))
 
-  (test (reverse color-names)
+  (test color-names
         (enum-set-fold (lambda (enum lis)
                          (cons (enum-name enum) lis))
                        '()

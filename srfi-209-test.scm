@@ -107,9 +107,7 @@
                          (enum-name->enum color ord))
                        (drop color-names 3))))
 
-(define empty-colors
-  (enum-set-delete-all! (enum-set-copy color-set)
-                        (enum-type-enums color)))
+(define empty-colors (enum-empty-set color))
 
 (define pizza-descriptions
   '((margherita "tomato and mozzarella")
@@ -472,7 +470,7 @@
                           (cons (enum-name enum) lis))
                         '()
                         color-set)
-   => (reverse color-names))
+   => color-names)
 
   (check (enum-set=? color-set (enum-set-universe reddish)) => #t)
 
