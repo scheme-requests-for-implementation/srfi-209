@@ -422,16 +422,16 @@
   (check (enum-set-size color-set) => (length color-names))
   (check (enum-set-size empty-colors) => 0)
 
-  (check (equal? (enum-set->list color-set) (enum-type-enums color)) => #t)
-  (check (null? (enum-set->list empty-colors)) => #t)
+  (check (equal? (enum-set->enum-list color-set) (enum-type-enums color)) => #t)
+  (check (null? (enum-set->enum-list empty-colors)) => #t)
   (check (= (enum-set-size color-set)
-            (length (enum-set->list color-set)))
+            (length (enum-set->enum-list color-set)))
    => #t)
 
   (check (enum-set-map->list enum-name color-set)    => color-names)
   (check (enum-set-map->list enum-name empty-colors) => '())
   (check (equal? (enum-set-map->list enum-name color-set)
-                 (map enum-name (enum-set->list color-set)))
+                 (map enum-name (enum-set->enum-list color-set)))
    => #t)
 
   (check (enum-set-count (lambda (e) (enum=? e color-blue)) color-set)
@@ -490,7 +490,7 @@
                        ds))
      => #t)
     (check (every (lambda (e) (eqv? (enum-name e) (enum-value e)))
-                  (enum-set->list us-traffic-light))
+                  (enum-set->enum-list us-traffic-light))
      => #t))
 
   (let ((color-con (enum-set-constructor reddish)))

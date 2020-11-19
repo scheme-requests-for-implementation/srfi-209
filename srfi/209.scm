@@ -475,9 +475,12 @@
   (assume (enum-set? eset))
   (bit-count (enum-set-bitmap eset)))
 
-(define (enum-set->list eset)
+(define (enum-set->enum-list eset)
   (assume (enum-set? eset))
   (enum-set-fold cons '() eset))
+
+(define (enum-set->list eset)
+  (enum-set-map->list enum-name eset))
 
 (define (enum-set-map->list proc eset)
   (assume (procedure? proc))

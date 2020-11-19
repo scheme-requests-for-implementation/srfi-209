@@ -348,15 +348,15 @@
   (test (length color-names) (enum-set-size color-set))
   (test 0 (enum-set-size empty-colors))
 
-  (test-assert (equal? (enum-set->list color-set) (enum-type-enums color)))
-  (test-assert (null? (enum-set->list empty-colors)))
+  (test-assert (equal? (enum-set->enum-list color-set) (enum-type-enums color)))
+  (test-assert (null? (enum-set->enum-list empty-colors)))
   (test-assert (= (enum-set-size color-set)
-                  (length (enum-set->list color-set))))
+                  (length (enum-set->enum-list color-set))))
 
   (test color-names (enum-set-map->list enum-name color-set))
   (test-assert (null? (enum-set-map->list enum-name empty-colors)))
   (test-assert (equal? (enum-set-map->list enum-name color-set)
-                       (map enum-name (enum-set->list color-set))))
+                       (map enum-name (enum-set->enum-list color-set))))
 
   (test 1 (enum-set-count (lambda (e) (enum=? e color-blue)) color-set))
   (test 0 (enum-set-count (lambda (e) (enum=? e color-blue)) reddish))
@@ -407,7 +407,7 @@
                         (map (lambda (sym) (enum-name->enum light-type sym))
                              ds)))
     (test-assert (every (lambda (e) (eqv? (enum-name e) (enum-value e)))
-                        (enum-set->list us-traffic-light))))
+                        (enum-set->enum-list us-traffic-light))))
 
   (let ((color-con (enum-set-constructor reddish)))
     (test-assert (eqv? (enum-set-type (color-con '(green))) color))

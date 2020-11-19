@@ -50,6 +50,7 @@
 
           enum-set-size enum-set->list enum-set-map->list enum-set-for-each
           enum-set-filter enum-set-remove enum-set-count enum-set-fold
+          enum-set->enum-list
 
           enum-set-union enum-set-intersection enum-set-difference
           enum-set-xor enum-set-complement enum-set-union!
