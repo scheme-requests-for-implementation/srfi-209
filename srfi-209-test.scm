@@ -351,6 +351,14 @@
   (check (enum-set>=? color-set reddish)     => #t)
   (check (enum-set>=? color-set color-set)   => #t)
 
+  ;;; enum-set-subset?
+  (check (enum-set-subset? reddish color-set) => #t)
+  (check (enum-set-subset? color-set reddish) => #f)
+  (check (enum-set-subset? reddish reddish)   => #t)
+  (let ((color-set* (make-enumeration '(red green blue))))
+    (check (enum-set-subset? color-set* color-set) => #t)
+    (check (enum-set-subset? color-set color-set*) => #f))
+
   ;;; any & every
 
   (check (enum-set-any? (lambda (e) (eq? 'green (enum-name e)))

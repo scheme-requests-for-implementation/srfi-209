@@ -287,6 +287,14 @@
   (test-assert (enum-set>=? color-set reddish))
   (test-assert (enum-set>=? color-set color-set))
 
+  ;;; enum-set-subset?
+  (test-assert (enum-set-subset? reddish color-set))
+  (test-not    (enum-set-subset? color-set reddish))
+  (test-assert (enum-set-subset? reddish reddish))
+  (let ((color-set* (make-enumeration '(red green blue))))
+    (test-assert (enum-set-subset? color-set* color-set))
+    (test-not    (enum-set-subset? color-set color-set*)))
+
   ;;; any & every
 
   (test-assert (enum-set-any? (lambda (e) (eq? 'green (enum-name e)))

@@ -345,8 +345,19 @@
   (zero? (bitwise-andc1 (enum-set-bitmap eset1)
                         (enum-set-bitmap eset2))))
 
+(define (%enum-set->name-mapping eset)
+  (mapping-unfold null?
+                  (lambda (syms) (values (car syms) #t))
+                  cdr
+                  (enum-set-map->list enum-name eset)
+                  symbol-comparator))
+
 (define (enum-set-subset? eset1 eset2)
-  (enum-set<=? eset1 eset2))
+  (assume (enum-set? eset1))
+  (assume (enum-set? eset2))
+  (mapping<=? symbol-comparator
+              (%enum-set->name-mapping eset1)
+              (%enum-set->name-mapping eset2)))
 
 (define (enum-set-any? pred eset)
   (assume (procedure? pred))
