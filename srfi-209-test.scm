@@ -107,9 +107,7 @@
                          (enum-name->enum color ord))
                        (drop color-names 3))))
 
-(define empty-colors
-  (enum-set-delete-all! (enum-set-copy color-set)
-                        (enum-type-enums color)))
+(define empty-colors (enum-empty-set color))
 
 (define pizza-descriptions
   '((margherita "tomato and mozzarella")
@@ -353,6 +351,14 @@
   (check (enum-set>=? color-set reddish)     => #t)
   (check (enum-set>=? color-set color-set)   => #t)
 
+  ;;; enum-set-subset?
+  (check (enum-set-subset? reddish color-set) => #t)
+  (check (enum-set-subset? color-set reddish) => #f)
+  (check (enum-set-subset? reddish reddish)   => #t)
+  (let ((color-set* (make-enumeration '(red green blue))))
+    (check (enum-set-subset? color-set* color-set) => #t)
+    (check (enum-set-subset? color-set color-set*) => #f))
+
   ;;; any & every
 
   (check (enum-set-any? (lambda (e) (eq? 'green (enum-name e)))
@@ -405,7 +411,8 @@
     (check (enum-set-contains? reddish** color-tangerine) => #f))
 
   (check (enum-set-empty?
-          (enum-set-delete-all! color-set (enum-type-enums color)))
+          (enum-set-delete-all! (enum-set-copy color-set)
+                                (enum-type-enums color)))
    => #t)
 )
 
@@ -415,16 +422,22 @@
   (check (enum-set-size color-set) => (length color-names))
   (check (enum-set-size empty-colors) => 0)
 
-  (check (equal? (enum-set->list color-set) (enum-type-enums color)) => #t)
-  (check (null? (enum-set->list empty-colors)) => #t)
+  (check (equal? (enum-set->enum-list color-set) (enum-type-enums color)) => #t)
+  (check (null? (enum-set->enum-list empty-colors)) => #t)
   (check (= (enum-set-size color-set)
-            (length (enum-set->list color-set)))
+            (length (enum-set->enum-list color-set)))
    => #t)
+
+  (check (enum-set->list color-set) => color-names)
+  (check (enum-set->list (enum-type->enum-set pizza))
+   => (map car pizza-descriptions))
+  (check (length (enum-set->enum-list color-set))
+   => (enum-set-size color-set))
 
   (check (enum-set-map->list enum-name color-set)    => color-names)
   (check (enum-set-map->list enum-name empty-colors) => '())
   (check (equal? (enum-set-map->list enum-name color-set)
-                 (map enum-name (enum-set->list color-set)))
+                 (enum-set->list color-set))
    => #t)
 
   (check (enum-set-count (lambda (e) (enum=? e color-blue)) color-set)
@@ -471,16 +484,19 @@
                           (cons (enum-name enum) lis))
                         '()
                         color-set)
-   => (reverse color-names))
+   => color-names)
 
   (check (enum-set=? color-set (enum-set-universe reddish)) => #t)
 
-  (let* ((ds '((red "stop") (yellow "floor it!") (green "go")))
+  (let* ((ds '(red yellow green))
          (us-traffic-light (make-enumeration ds))
          (light-type (enum-set-type us-traffic-light)))
     (check (every (lambda (e) (enum-set-contains? us-traffic-light e))
-                  (map (lambda (p) (enum-name->enum light-type (car p)))
+                  (map (lambda (sym) (enum-name->enum light-type sym))
                        ds))
+     => #t)
+    (check (every (lambda (e) (eqv? (enum-name e) (enum-value e)))
+                  (enum-set->enum-list us-traffic-light))
      => #t))
 
   (let ((color-con (enum-set-constructor reddish)))

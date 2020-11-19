@@ -69,9 +69,7 @@
                          (enum-name->enum color ord))
                        (drop color-names 3))))
 
-(define empty-colors
-  (enum-set-delete-all! (enum-set-copy color-set)
-                        (enum-type-enums color)))
+(define empty-colors (enum-empty-set color))
 
 (define pizza-descriptions
   '((margherita "tomato and mozzarella")
@@ -253,9 +251,7 @@
   (test-assert (enum-set-empty? empty-colors))
   (test-not (enum-set-empty? color-set))
 
-  (test-assert
-   (enum-set=? (enum-set-projection (enum-type->enum-set color) reddish)
-               reddish))
+  (test-assert (enum-set=? (enum-set-projection color reddish) reddish))
   (let* ((color* (make-enum-type color-names))
          (reddish* (list->enum-set color*
                                    (map (lambda (name)
@@ -290,6 +286,14 @@
   (test-not    (enum-set>=? reddish color-set))
   (test-assert (enum-set>=? color-set reddish))
   (test-assert (enum-set>=? color-set color-set))
+
+  ;;; enum-set-subset?
+  (test-assert (enum-set-subset? reddish color-set))
+  (test-not    (enum-set-subset? color-set reddish))
+  (test-assert (enum-set-subset? reddish reddish))
+  (let ((color-set* (make-enumeration '(red green blue))))
+    (test-assert (enum-set-subset? color-set* color-set))
+    (test-not    (enum-set-subset? color-set color-set*)))
 
   ;;; any & every
 
@@ -336,22 +340,28 @@
     (test-not    (enum-set-contains? reddish** color-tangerine)))
 
   (test-assert (enum-set-empty?
-                (enum-set-delete-all! color-set (enum-type-enums color))))
+                (enum-set-delete-all! (enum-set-copy color-set)
+                                      (enum-type-enums color))))
 )
 
 (test-group "Derived enum set operations"
   (test (length color-names) (enum-set-size color-set))
   (test 0 (enum-set-size empty-colors))
 
-  (test-assert (equal? (enum-set->list color-set) (enum-type-enums color)))
-  (test-assert (null? (enum-set->list empty-colors)))
+  (test-assert (equal? (enum-set->enum-list color-set) (enum-type-enums color)))
+  (test-assert (null? (enum-set->enum-list empty-colors)))
   (test-assert (= (enum-set-size color-set)
-                  (length (enum-set->list color-set))))
+                  (length (enum-set->enum-list color-set))))
+
+  (test color-names (enum-set->list color-set))
+  (test (map car pizza-descriptions)
+        (enum-set->list (enum-type->enum-set pizza)))
+  (test (enum-set-size color-set) (length (enum-set->enum-list color-set)))
 
   (test color-names (enum-set-map->list enum-name color-set))
   (test-assert (null? (enum-set-map->list enum-name empty-colors)))
   (test-assert (equal? (enum-set-map->list enum-name color-set)
-                       (map enum-name (enum-set->list color-set))))
+                       (enum-set->list color-set)))
 
   (test 1 (enum-set-count (lambda (e) (enum=? e color-blue)) color-set))
   (test 0 (enum-set-count (lambda (e) (enum=? e color-blue)) reddish))
@@ -387,7 +397,7 @@
                              color-set)
           n))
 
-  (test (reverse color-names)
+  (test color-names
         (enum-set-fold (lambda (enum lis)
                          (cons (enum-name enum) lis))
                        '()
@@ -395,12 +405,14 @@
 
   (test-assert (enum-set=? color-set (enum-set-universe reddish)))
 
-  (let* ((ds '((red "stop") (yellow "floor it!") (green "go")))
+  (let* ((ds '(red yellow green))
          (us-traffic-light (make-enumeration ds))
          (light-type (enum-set-type us-traffic-light)))
     (test-assert (every (lambda (e) (enum-set-contains? us-traffic-light e))
-                        (map (lambda (p) (enum-name->enum light-type (car p)))
-                             ds))))
+                        (map (lambda (sym) (enum-name->enum light-type sym))
+                             ds)))
+    (test-assert (every (lambda (e) (eqv? (enum-name e) (enum-value e)))
+                        (enum-set->enum-list us-traffic-light))))
 
   (let ((color-con (enum-set-constructor reddish)))
     (test-assert (eqv? (enum-set-type (color-con '(green))) color))
