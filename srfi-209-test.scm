@@ -428,10 +428,16 @@
             (length (enum-set->enum-list color-set)))
    => #t)
 
+  (check (enum-set->list color-set) => color-names)
+  (check (enum-set->list (enum-type->enum-set pizza))
+   => (map car pizza-descriptions))
+  (check (length (enum-set->enum-list color-set))
+   => (enum-set-size color-set))
+
   (check (enum-set-map->list enum-name color-set)    => color-names)
   (check (enum-set-map->list enum-name empty-colors) => '())
   (check (equal? (enum-set-map->list enum-name color-set)
-                 (map enum-name (enum-set->enum-list color-set)))
+                 (enum-set->list color-set))
    => #t)
 
   (check (enum-set-count (lambda (e) (enum=? e color-blue)) color-set)

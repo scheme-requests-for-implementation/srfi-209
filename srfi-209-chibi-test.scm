@@ -353,10 +353,15 @@
   (test-assert (= (enum-set-size color-set)
                   (length (enum-set->enum-list color-set))))
 
+  (test color-names (enum-set->list color-set))
+  (test (map car pizza-descriptions)
+        (enum-set->list (enum-type->enum-set pizza)))
+  (test (enum-set-size color-set) (length (enum-set->enum-list color-set)))
+
   (test color-names (enum-set-map->list enum-name color-set))
   (test-assert (null? (enum-set-map->list enum-name empty-colors)))
   (test-assert (equal? (enum-set-map->list enum-name color-set)
-                       (map enum-name (enum-set->enum-list color-set))))
+                       (enum-set->list color-set)))
 
   (test 1 (enum-set-count (lambda (e) (enum=? e color-blue)) color-set))
   (test 0 (enum-set-count (lambda (e) (enum=? e color-blue)) reddish))
