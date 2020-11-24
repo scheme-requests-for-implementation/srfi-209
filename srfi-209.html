@@ -23,6 +23,7 @@ Enumerations and Enum Sets</h1>
   <li>Draft #1 published: 2020-08-29</li>
   <li>Draft #2 published: 2020-09-25</li>
   <li>Draft #3 published: 2020-09-30</li>
+  <li>Draft #4 published: 2020-11-15</li>
   <li>John Cowan's <a href="https://github.com/johnwcowan/srfi-209">personal
     Git repo for this SRFI</a> for reference while the SRFI is in
     <em>draft</em> status (<a href="https://htmlpreview.github.io/?https://github.com/johnwcowan/srfi-209/blob/master/srfi-209.html">preview</a>)</li>
@@ -85,7 +86,7 @@ elsewhere, or <a href="https://srfi.schemers.org/srfi-146/srfi-146.html">SRFI
 In that library, neither enum types nor enum objects are exposed,
 only enum names and enum sets.  Some of the R6RS-specific procedures
 given below operate in those terms, and as such are redundant with
-other procedures.  These are deprecated, and have been 
+other procedures.  These are deprecated, and have been
 set in <small>small print</small>.</p>
 
 <h3 id="predicates">Predicates</h3>
@@ -299,7 +300,7 @@ hash function, and orders enums based on their ordinal values.</p>
 </code></pre>
 <p><code>(enum-set</code>&nbsp;<em>enum-type enum</em> …<code>)</code></p>
 <p>Returns an enum set that can contain enums of the type <em>enum-type</em>
-and containing the <em>enums</em>. It is an error unless 
+and containing the <em>enums</em>. It is an error unless
 all the <em>enums</em> belong to <em>enum-type</em>.</p>
 <pre class="example"><code>(enum-set-contains? (enum-set color-red color-blue) color-red)
  &rArr; #t
@@ -319,7 +320,7 @@ unless all the members are enums belonging to <em>enum-type</em>.</p>
 </code></pre>
 <p><code>(enum-set-projection</code>&nbsp;<em>enum-type-or-set
 enum-set</em><code>)</code></p>
-If <em>enum-type-or-set</em> is an enum set, its enum type is extracted
+<p>If <em>enum-type-or-set</em> is an enum set, its enum type is extracted
 and used; otherwise, the enum type is used directly.
 Returns an enum set containing the enums belonging to the enum type
 that have the same names as the members of <em>enum-set</em>, whose enum type
@@ -597,7 +598,7 @@ enum-set-2</em><code>)</code><br/>
 enum-set-2</em><code>)</code></p>
 <p>Returns an enum set containing the elements of <em>enum-set-1</em> but not
 <em>enum-set-2</em>. It is an error if all the elements of the result do not
-belong to the same enum type. 
+belong to the same enum type.
 <pre class="example"><code>(enum-set=? ~reddish (enum-set-difference! color-set reddish))
  &rArr; #t
 </code></pre>
@@ -615,13 +616,12 @@ the elements of the result do not belong to the same enum type.</p>
 </code></pre>
 
 <h3>Syntax</h3>
-<div align=left><tt>(define-enum &lt;type-name&gt;</tt>
-<a name="node_idx_1262"></a><tt>(&lt;name-value&gt;&nbsp;<tt>...</tt>)
-&lt;constructor-syntax&gt;)</tt><br/>
-<small><div align=left><tt>(define-enumeration &lt;type-name&gt;</tt>
-<a name="node_idx_1262"></a><tt>(&lt;name-value&gt;&nbsp;<tt>...</tt>)
-&lt;constructor-syntax&gt;)</tt></small>
-</p>
+<p><code>(define-enum&nbsp;</code><em>type-name</em><code>
+(</code><em>name-value</em>&nbsp;<code>...)</code>&nbsp;
+<em>constructor-syntax</em><code>)</code></p>
+<p><small><code>(define-enumeration&nbsp;</code><em>type-name</em>
+<code>(</code><em>name-value</em>&nbsp;<code>...)</code>&nbsp;
+<em>constructor-syntax</em><code>)</code></small></p>
 <p>These macros allocate a newly created enum type and
 provide two macros for constructing its members and sets of its
 members.  They are definitions and can appear
