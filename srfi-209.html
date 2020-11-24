@@ -69,9 +69,9 @@ associated values (although in Common Lisp they do).</p>
  sets, which can be stored more efficiently than general lists,
 possibly as integers.  However, neither enum types nor enum objects are exposed,
 only enum names and enum sets.
-This means that R6RS cannot have a procedure that take an enum-type and return the
+This means that R6RS cannot have a procedure that takes an enum-type and returns the
 enum of the type whose ordinal number is <em>n</em>,
-and likewise with a procedure that takes an existing enum-type and create an enum-set
+nor a procedure that takes an existing enum-type and creates an enum-set
 containing specified enums from it.  Instead, it must use procedures that return
 a quasi-curried procedure for performing these operations on a specified enum-type.
 The nearest equivalent to an enum object in the sense of this SRFI
