@@ -1,4 +1,4 @@
-* SRFI 209: Enumerations and Enum Sets
+* SRFI 209: Enums and Enum Sets
 
 ** by John Cowan (text) and Wolfgang Corcoran-Mathe (implementation)
 
@@ -6,7 +6,7 @@
 
 keywords: [[https://srfi.schemers.org/?keywords=data-structure][Data Structure]]
 
-This repository hosts [[https://srfi.schemers.org/srfi-209/][SRFI 209]]: Enumerations and Enum Sets, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
+This repository hosts [[https://srfi.schemers.org/srfi-209/][SRFI 209]]: Enums and Enum Sets, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
 
 This SRFI is in /draft/ status.
 
