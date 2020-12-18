@@ -68,7 +68,7 @@ logically independent universe of flags; and in Scheme symbols do not have
 associated values (although in Common Lisp they do).</p>
 <p>R6RS enums ameliorate these disadvantages by providing "type-safe"
  sets, which can be stored more efficiently than general lists,
-possibly as integers.  However, neither enum types nor enum objects are exposed,
+possibly as integers.  However, neither enum types nor enum objects are exposed &mdash;
 only enum names and enum sets.
 This means that R6RS cannot have a procedure that takes an enum-type and returns the
 enum of the type whose ordinal number is <em>n</em>,
@@ -82,8 +82,8 @@ singleton, and comparing two such sets for equality involves = rather than <code
 <p>In C, enums have names and numeric
 values, by default consecutive values, but often powers of two or something
 externally dictated. However, the name is not accessible at runtime, and
-enum types are not really disjoint from integer types (in C++ they are
-statically distinct).</p>
+enum types are not really disjoint from integer types.  (In C++, they are
+statically distinct.)</p>
 <h3>Enum collections</h3>
 <p><em>Enum sets</em> are used to represent multiple enums that belong
 to the same type. They provide a subset of the operations provided by <a
@@ -93,14 +93,14 @@ sets.</p>
 future SRFI. Meanwhile either general-purpose hash tables from <a
 href="https://srfi.schemers.org/srfi-125/srfi-125.html">SRFI 125</a> or
 elsewhere, or <a href="https://srfi.schemers.org/srfi-146/srfi-146.html">SRFI
-146</a> mappings can be used instead.</p>
+146</a> mappings, can be used instead.</p>
 
 <h2 id="specification">Specification</h2>
 
 <h3 id="r6rs">R6RS compatibility</h3>
 
 <p>This SRFI provides the same procedures as the <code>(rnrs enums)</code> library.
-In that library. neither enum types nor enum objects are exposed,
+In that library, neither enum types nor enum objects are exposed.
 Some of the R6RS-specific procedures
 given below operate in those terms, and as such are redundant with
 other procedures.  These are deprecated, and have been
@@ -158,7 +158,7 @@ allocated enums. Both enums and enum types are immutable, and it is not
 possible to create an enum except as part of creating an enum type.</p>
 <p>The elements of <em>list</em> are either symbols or two-element lists, where
 each list has a symbol as the first element and any value as the second
-element. Each list element causes a single enum to be generated, whose name is
+element. Each list element causes a single enum to be generated, and the enum's name is
 specified by the symbol. It is an error unless all the symbols are distinct
 within an enum type. The position of the element in <em>list</em> is the
 ordinal of the corresponding enum, so ordinals within an enum type are also
@@ -420,7 +420,7 @@ and cannot be used to define a comparator.</p>
 <code>(enum-set&lt;=?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code><br/>
 <code>(enum-set&gt;=?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code></p>
 <p>Returns <code>#t</code> if the members of <em>enum-set-1</em>
-are the same as / a proper subset of / a proper superset of/
+are the same as / a proper subset of / a proper superset of /
 a subset of / a superset of
 <em>enum-set-2</em>.
 It is an error if the members of the enum sets do not belong
@@ -626,7 +626,7 @@ belong to the same enum type.
 enum-set-2</em><code>)</code><br/>
 <code>(enum-set-xor!</code>&nbsp;<em>enum-set-1
 enum-set-2</em><code>)</code></p>
-<p>Returns an enum set containing all the elements of either
+<p>Returns an enum set containing all the elements that appear in either
 <em>enum-set-1</em> or <em>enum-set-2</em> but not both. It is an error if all
 the elements of the result do not belong to the same enum type.</p>
 <pre class="example"><code>(enum-set=? color-set (enum-set-xor! reddish ~reddish))
