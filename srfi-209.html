@@ -387,8 +387,8 @@ members of <em>enum-set</em>.</p>
 (enum-set-contains? (enum-set-delete! color-set color-blue) color-blue) &rArr; #f
 </code></pre>
 <p>[R6RS] <small><code>(enum-set-member?</code>&nbsp;<em>symbol
-enum-set</em><code>)</code></p>
-<p>Returns <code>#t</code> if <em>symbol</em>
+enum-set</em><code>)</code></small></p>
+<p><small>Returns <code>#t</code> if <em>symbol</em>
 is the name of a member of <em>enum-set</em>.
 It is an error if <em>symbol</em> is not the name
 of an enum belonging to the enum type of <em>enum-set</em>.</small></p>
@@ -436,7 +436,7 @@ to the same type.</p>
 (enum-set&gt;=? reddish color-set) &rArr; #f
 </code></pre>
 <p><code>(enum-set-subset?</code>&nbsp;<em>enum-set-1 enum-set-2</em><code>)</code></p>
-Returns <code>#t</code>
+<p>Returns <code>#t</code>
 if the set of the names of the elements of <em>enum-set-1</em>
 is a subset of the set of the names of the elements of <em>enum-set-2</em>.
 Otherwise returns <code>#f</code>.
