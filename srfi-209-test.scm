@@ -546,10 +546,10 @@
 )
 
 (define (check-syntax)
-  (print-header "Running syntax tests...")
-
   (define-enum hobbit (frodo sam merry pippin) hobbit-set)
   (define-enumeration wizard (gandalf saruman radagast) wizard-set)
+
+  (print-header "Running syntax tests...")
 
   (check (enum-name (hobbit merry)) => 'merry)
   (check (enum-set? (hobbit-set)) => #t)
