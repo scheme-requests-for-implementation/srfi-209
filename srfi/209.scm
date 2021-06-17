@@ -69,12 +69,12 @@
                    symbol-hash))
 
 (define (make-name-table enums)
-  (mapping-unfold null?
-                  (lambda (enums)
-                    (values (enum-name (car enums)) (car enums)))
-                  cdr
-                  enums
-                  symbol-comparator))
+  (hash-table-unfold null?
+                     (lambda (enums)
+                       (values (enum-name (car enums)) (car enums)))
+                     cdr
+                     enums
+                     symbol-comparator))
 
 (define (%enum-type=? etype1 etype2)
   (eqv? etype1 etype2))
@@ -138,7 +138,7 @@
 (define (enum-name->enum type name)
   (assume (enum-type? type))
   (assume (symbol? name))
-  (mapping-ref/default (enum-type-name-table type) name #f))
+  (hash-table-ref/default (enum-type-name-table type) name #f))
 
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))
