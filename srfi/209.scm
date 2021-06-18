@@ -140,6 +140,7 @@
   (assume (symbol? name))
   (hash-table-ref/default (enum-type-name-table type) name #f))
 
+;; TODO: Version without typechecks for internal use.
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))
   (assume (exact-natural? ordinal))
@@ -215,30 +216,29 @@
 ;;;; Enum set constructors
 
 (define-record-type <enum-set>
-  (make-enum-set type bitmap)
+  (make-enum-set type bitvector)
   enum-set?
   (type enum-set-type)
-  (bitmap enum-set-bitmap set-enum-set-bitmap!))
+  (bitvector enum-set-bitvector set-enum-set-bitvector!))
 
 (define (enum-empty-set type)
   (assume (enum-type? type))
-  (make-enum-set type 0))
+  (make-enum-set type (make-bitvector (enum-type-size type) #f)))
 
 (define (enum-type->enum-set type)
   (assume (enum-type? type))
-  (make-enum-set type (- (expt 2 (enum-type-size type)) 1)))
+  (make-enum-set type (make-bitvector (enum-type-size type) #t)))
 
 (define (enum-set type . enums) (list->enum-set type enums))
 
 (define (list->enum-set type enums)
   (assume (or (pair? enums) (null? enums)))
-  (make-enum-set
-   type
-   (fold (lambda (e b)
-           (assume (%well-typed-enum? type e) "ill-typed enum")
-           (bitwise-ior b (expt 2 (enum-ordinal e))))
-         0
-         enums)))
+  (let ((vec (make-bitvector (enum-type-size type) #f)))
+    (for-each (lambda (e)
+                (assume (%well-typed-enum? type e) "ill-typed enum")
+                (bitvector-set! vec (enum-ordinal e) vec))
+              enums)
+    (make-enum-set type vec)))
 
 ;; Returns a set of enums drawn from the enum-type/-set src with
 ;; the same names as the enums of eset.
@@ -253,7 +253,8 @@
                          eset))))
 
 (define (enum-set-copy eset)
-  (make-enum-set (enum-set-type eset) (enum-set-bitmap eset)))
+  (make-enum-set (enum-set-type eset)
+                 (bitvector-copy (enum-set-bitvector eset))))
 
 ;; [Deprecated]
 (define (make-enumeration names)
@@ -291,31 +292,38 @@
   (assume (enum-set? eset))
   (assume (%well-typed-enum? (enum-set-type eset) enum)
           "enum-set-contains?: invalid argument")
-  (not (zero? (bitwise-and (enum-set-bitmap eset)
-                           (expt 2 (enum-ordinal enum))))))
+  (bitvector-ref/bool (enum-set-bitvector eset) (enum-ordinal enum)))
 
 ;; FIXME: Avoid double (type, then set) lookup.
 (define (enum-set-member? name eset)
   (assume (symbol? name))
   (assume (enum-set? eset))
-  (let ((ord (enum-name->ordinal (enum-set-type eset) name)))
-    (not (zero? (bitwise-and (enum-set-bitmap eset) (expt 2 ord))))))
+  (bitvector-ref/bool (enum-set-bitvector eset)
+                      (enum-name->ordinal (enum-set-type eset) name)))
 
 (define (%enum-set-type=? eset1 eset2)
   (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
 
 (define (enum-set-empty? eset)
   (assume (enum-set? eset))
-  (zero? (enum-set-bitmap eset)))
+  (zero? (bitvector-count #t (enum-set-bitvector eset))))
 
 (define (enum-set-disjoint? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
-  (zero? (bitwise-and (enum-set-bitmap eset1) (enum-set-bitmap eset2))))
+  (let ((vec1 (enum-set-bitvector eset1))
+        (vec2 (enum-set-bitvector eset2)))
+    (let ((len (bitvector-length vec1)))
+      (let loop ((i 0))
+        (or (= i len)
+            (and (= 1 (bitwise-nand (bitvector-ref/int vec1)
+                                    (bitvector-ref/int vec2)))
+                 (loop (+ i 1))))))))
 
 (define (enum-set=? eset1 eset2)
-  (= (enum-set-bitmap eset1) (enum-set-bitmap eset2)))
+  (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (bitvector=? (enum-set-bitvector eset1) (enum-set-bitvector eset2)))
 
 (define (enum-set<? eset1 eset2)
   (assume (enum-set? eset1))
@@ -377,103 +385,62 @@
 
 ;;;; Enum set mutators
 
-;; Fold a list of enums into a bitmap of their ordinals.
-(define (%enum-list->bitmap type enums)
-  (fold (lambda (enum b)
-          (assume (%well-typed-enum? type enum))
-          (bitwise-ior b (expt 2 (enum-ordinal enum))))
-        0
-        enums))
-
-(define enum-set-adjoin
-  (case-lambda
-    ((eset enum)                 ; fast path
-     (assume (enum-set? eset))
-     (let ((type (enum-set-type eset)))
-       (assume (%well-typed-enum? type enum)
-               "enum-set-adjoin: invalid argument"
-               enum)
-       (make-enum-set
-        type
-        (bitwise-ior (enum-set-bitmap eset)
-                     (expt 2 (enum-ordinal enum))))))
-    ((eset . enums)              ; variadic path
-     (assume (enum-set? eset))
-     (let ((type (enum-set-type eset)))
-       (make-enum-set
-        type
-        (bitwise-ior (enum-set-bitmap eset)
-                     (%enum-list->bitmap type enums)))))))
+(define (enum-set-adjoin eset . enums)
+  (apply enum-set-adjoin! (enum-set-copy eset) enums))
 
 (define enum-set-adjoin!
   (case-lambda
     ((eset enum)                 ; fast path
      (assume (enum-set? eset))
      (assume (%well-typed-enum? (enum-set-type eset) enum))
-     (set-enum-set-bitmap!
-      eset
-      (bitwise-ior (enum-set-bitmap eset)
-                   (expt 2 (enum-ordinal enum))))
+     (bitvector-set! (enum-set-bitvector eset) (enum-ordinal enum) #t)
      eset)
     ((eset . enums)              ; variadic path
      (assume (enum-set? eset))
-     (set-enum-set-bitmap!
-      eset
-      (bitwise-ior (enum-set-bitmap eset)
-                   (%enum-list->bitmap (enum-set-type eset) enums)))
-     eset)))
+     (let ((type (enum-set-type eset))
+           (vec (enum-set-bitvector eset)))
+       (for-each (lambda (e)
+                   (assume (%well-typed-enum? type e)
+                           "enum-set-adjoin!: ill-typed enum")
+                   (bitvector-set! vec (enum-ordinal e) #t))
+                 enums)
+       eset))))
 
-(define enum-set-delete
-  (case-lambda
-    ((eset enum)                ; fast path
-     (assume (enum-set? eset))
-     (let ((type (enum-set-type eset)))
-       (assume (%well-typed-enum? type enum) "ill-typed enum" enum type)
-       (make-enum-set type
-                      (bitwise-andc2 (enum-set-bitmap eset)
-                                     (expt 2 (enum-ordinal enum))))))
-    ((eset . enums)             ; variadic path
-     (enum-set-delete-all eset enums))))
+(define (enum-set-delete eset . enums)
+  (apply enum-set-delete! (enum-set-copy eset) enums))
 
 (define enum-set-delete!
   (case-lambda
     ((eset enum)                ; fast path
      (assume (enum-set? eset))
-     (let ((type (enum-set-type eset)))
-       (assume (%well-typed-enum? type enum) "ill-typed enum" enum type)
-       (set-enum-set-bitmap!
-        eset
-        (bitwise-andc2 (enum-set-bitmap eset)
-                       (expt 2 (enum-ordinal enum))))
-       eset))
+     (assume (%well-typed-enum? (enum-set-type eset) enum)
+             "enum-set-delete!: ill-typed enum")
+     (bitvector-set! (enum-set-bitvector eset) (enum-ordinal enum) #f)
+     eset)
     ((eset . enums)             ; variadic path
      (enum-set-delete-all! eset enums))))
 
 (define (enum-set-delete-all eset enums)
-  (assume (enum-set? eset))
-  (assume (or (pair? enums) (null? enums)))
-  (let ((type (enum-set-type eset)))
-    (make-enum-set type
-                   (bitwise-andc2 (enum-set-bitmap eset)
-                                  (%enum-list->bitmap type enums)))))
+  (enum-set-delete-all! (enum-set-copy eset) enums))
 
 (define (enum-set-delete-all! eset enums)
   (assume (enum-set? eset))
   (assume (or (pair? enums) (null? enums)))
-  (if (null? enums)
-      eset
-      (begin
-       (set-enum-set-bitmap!
-        eset
-        (bitwise-andc2 (enum-set-bitmap eset)
-                       (%enum-list->bitmap (enum-set-type eset) enums)))
-       eset)))
+  (unless (null? enums)
+    (let ((type (enum-set-type eset))
+          (vec (enum-set-bitvector eset)))
+       (for-each (lambda (e)
+                   (assume (%well-typed-enum? type e)
+                           "enum-set-delete-all!: ill-typed enum")
+                   (bitvector-set! vec (enum-ordinal e) #f))
+                 enums)))
+  eset)
 
 ;;;; Enum set operations
 
 (define (enum-set-size eset)
   (assume (enum-set? eset))
-  (bit-count (enum-set-bitmap eset)))
+  (bitvector-count #t (enum-set-bitvector eset)))
 
 (define (enum-set->enum-list eset)
   (assume (enum-set? eset))
@@ -490,108 +457,91 @@
   (assume (procedure? pred))
   (enum-set-fold (lambda (e n) (if (pred e) (+ n 1) n)) 0 eset))
 
-;; TODO: Optimize this.
 (define (enum-set-filter pred eset)
-  (assume (enum-set? eset))
-  (let ((type (enum-set-type eset))
-        (bitmap (enum-set-bitmap eset)))
-    (make-enum-set
-     type
-     (fold (lambda (p m)
-             (let ((i (car p)) (b (cadr p)))
-               (if (and b (pred (enum-ordinal->enum type i)))
-                   (bitwise-ior m (expt 2 i))
-                   m)))
-           0
-           (zip (iota (integer-length bitmap))
-                (bits->list bitmap))))))
+  (enum-set-filter! pred (enum-set-copy eset)))
 
-;; TODO: Optimize this.
-(define (enum-set-remove pred eset)
+(define (enum-set-filter! pred eset)
+  (assume (procedure? pred))
   (assume (enum-set? eset))
-  (let ((type (enum-set-type eset))
-        (bitmap (enum-set-bitmap eset)))
-    (make-enum-set
-     type
-     (fold (lambda (p m)
-             (let ((i (car p)) (b (cadr p)))
-               (if (and b (pred (enum-ordinal->enum type i)))
-                   m
-                   (bitwise-ior m (expt 2 i)))))
-           0
-           (zip (iota (integer-length bitmap))
-                (bits->list bitmap))))))
+  (let* ((type (enum-set-type eset))
+         (vec (enum-set-bitvector eset)))
+    (let loop ((i (- (bitvector-length vec) 1)))
+      (cond ((< i 0) eset)
+            ((and (bitvector-ref/bool vec i)
+                  (not (pred (enum-ordinal->enum type i))))
+             (bitvector-set! vec i #f))
+            (else (loop (- i 1)))))))
+
+(define (enum-set-remove pred eset)
+  (enum-set-remove! pred (enum-set-copy eset)))
+
+(define (enum-set-remove! pred eset)
+  (assume (procedure? pred))
+  (assume (enum-set? eset))
+  (let* ((type (enum-set-type eset))
+         (vec (enum-set-bitvector eset)))
+    (let loop ((i (- (bitvector-length vec) 1)))
+      (cond ((< i 0) eset)
+            ((and (bitvector-ref/bool vec i)
+                  (pred (enum-ordinal->enum type i)))
+             (bitvector-set! vec i #f))
+            (else (loop (- i 1)))))))
 
 (define (enum-set-for-each proc eset)
   (assume (procedure? proc))
   (enum-set-fold (lambda (e _) (proc e)) '() eset))
 
-;; TODO: Optimize this.
 (define (enum-set-fold proc nil eset)
   (assume (procedure? proc))
   (assume (enum-set? eset))
-  (let ((type (enum-set-type eset))
-        (bitmap (enum-set-bitmap eset)))
-    (cadr
-     (fold-right (lambda (b p)
-                   (let ((i (car p)) (state (cadr p)))
-                     (if b
-                         (list (- i 1)
-                               (proc (enum-ordinal->enum type i) state))
-                         (list (- i 1) state))))
-                 (list (- (integer-length bitmap) 1) nil)
-                 (bits->list bitmap)))))
+  (let ((type (enum-set-type eset)))
+    (let* ((vec (enum-set-bitvector eset))
+           (len (bitvector-length vec)))
+      (let loop ((i 0) (state nil))
+        (cond ((= i len) state)
+              ((bitvector-ref/bool vec i)
+               (loop (+ i 1) (proc (enum-ordinal->enum type i) state)))
+              (else (loop (+ i 1) state)))))))
 
 ;;;; Enum set logical operations
 
-(define (%enum-set-logical-op proc eset1 eset2)
+(define (%enum-set-logical-op! bv-proc eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
-  (make-enum-set
-   (enum-set-type eset1)
-   (proc (enum-set-bitmap eset1) (enum-set-bitmap eset2))))
-
-(define (%enum-set-logical-op! proc eset1 eset2)
-  (assume (enum-set? eset1))
-  (assume (enum-set? eset2))
-  (assume (%enum-set-type=? eset1 eset2) "enum sets have different types")
-  (set-enum-set-bitmap! eset1
-                        (proc (enum-set-bitmap eset1)
-                              (enum-set-bitmap eset2)))
+  (bv-proc (enum-set-bitvector eset1) (enum-set-bitvector eset2))
   eset1)
 
 (define (enum-set-union eset1 eset2)
-  (%enum-set-logical-op bitwise-ior eset1 eset2))
+  (%enum-set-logical-op! bitvector-ior! (enum-set-copy eset1) eset2))
 
 (define (enum-set-intersection eset1 eset2)
-  (%enum-set-logical-op bitwise-and eset1 eset2))
+  (%enum-set-logical-op! bitvector-and! (enum-set-copy eset1) eset2))
 
 (define (enum-set-difference eset1 eset2)
-  (%enum-set-logical-op bitwise-andc2 eset1 eset2))
+  (%enum-set-logical-op! bitvector-andc2! (enum-set-copy eset1) eset2))
 
 (define (enum-set-xor eset1 eset2)
-  (%enum-set-logical-op bitwise-xor eset1 eset2))
+  (%enum-set-logical-op! bitvector-xor! (enum-set-copy eset1) eset2))
 
 (define (enum-set-union! eset1 eset2)
-  (%enum-set-logical-op! bitwise-ior eset1 eset2))
+  (%enum-set-logical-op! bitvector-ior! eset1 eset2))
 
 (define (enum-set-intersection! eset1 eset2)
-  (%enum-set-logical-op! bitwise-and eset1 eset2))
+  (%enum-set-logical-op! bitvector-and! eset1 eset2))
 
 (define (enum-set-difference! eset1 eset2)
-  (%enum-set-logical-op! bitwise-andc2 eset1 eset2))
+  (%enum-set-logical-op! bitvector-andc2! eset1 eset2))
 
 (define (enum-set-xor! eset1 eset2)
-  (%enum-set-logical-op! bitwise-xor eset1 eset2))
+  (%enum-set-logical-op! bitvector-xor! eset1 eset2))
 
 (define (enum-set-complement eset)
-  (assume (enum-set? eset))
-  (%enum-set-logical-op bitwise-andc1 eset (enum-set-universe eset)))
+  (enum-set-complement! (enum-set-copy eset)))
 
 (define (enum-set-complement! eset)
   (assume (enum-set? eset))
-  (%enum-set-logical-op! bitwise-andc1 eset (enum-set-universe eset)))
+  (bitvector-not! (enum-set-bitvector eset)))
 
 ;;;; Syntax
 

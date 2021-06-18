@@ -5,7 +5,8 @@
           (srfi 125)
           (srfi 128)
           (srfi 151)
-          (srfi 146))
+          (srfi 146)
+          (srfi 178))
 
   (cond-expand
     ((library (srfi 145))
