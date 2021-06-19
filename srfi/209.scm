@@ -25,6 +25,14 @@
 (define (exact-natural? obj)
   (and (exact-integer? obj) (not (negative? obj))))
 
+(define (bitvector-subset? vec1 vec2)
+  (let loop ((i (- (bitvector-length vec1) 1)))
+    (cond ((< i 0) #t)
+          ((and (bitvector-ref/bool vec1 i)
+                (zero? (bitvector-ref/int vec2 i)))
+           #f)
+          (else (loop (- i 1))))))
+
 ;;;; Types
 
 (define-record-type <enum-type>
@@ -329,29 +337,33 @@
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
-  (not (zero? (bitwise-andc1 (enum-set-bitmap eset1)
-                             (enum-set-bitmap eset2)))))
+  (let ((vec1 (enum-set-bitvector eset1))
+        (vec2 (enum-set-bitvector eset2)))
+    (and (bitvector-subset? vec1 vec2)
+         (not (bitvector=? vec1 vec2)))))
 
 (define (enum-set>? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
-  (not (zero? (bitwise-andc2 (enum-set-bitmap eset1)
-                             (enum-set-bitmap eset2)))))
+  (let ((vec1 (enum-set-bitvector eset1))
+        (vec2 (enum-set-bitvector eset2)))
+    (and (bitvector-subset? vec2 vec1)
+         (not (bitvector=? vec1 vec2)))))
 
 (define (enum-set<=? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
-  (zero? (bitwise-andc2 (enum-set-bitmap eset1)
-                        (enum-set-bitmap eset2))))
+  (bitvector-subset? (enum-set-bitvector eset1)
+                     (enum-set-bitvector eset2)))
 
 (define (enum-set>=? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
   (assume (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
-  (zero? (bitwise-andc1 (enum-set-bitmap eset1)
-                        (enum-set-bitmap eset2))))
+  (bitvector-subset? (enum-set-bitvector eset2)
+                     (enum-set-bitvector eset1)))
 
 (define (%enum-set->name-mapping eset)
   (mapping-unfold null?
