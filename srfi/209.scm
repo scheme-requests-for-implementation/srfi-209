@@ -148,12 +148,15 @@
   (assume (symbol? name))
   (hash-table-ref/default (enum-type-name-table type) name #f))
 
-;; TODO: Version without typechecks for internal use.
 (define (enum-ordinal->enum enum-type ordinal)
   (assume (enum-type? enum-type))
   (assume (exact-natural? ordinal))
   (and (< ordinal (enum-type-size enum-type))
        (vector-ref (enum-type-enum-vector enum-type) ordinal)))
+
+;; Fast version for internal use.
+(define (%enum-ordinal->enum-no-check enum-type ordinal)
+  (vector-ref (enum-type-enum-vector enum-type) ordinal))
 
 ;;; Derived procedures
 
@@ -172,11 +175,11 @@
 
 (define (enum-ordinal->name type ordinal)
   (assume (exact-natural? ordinal))
-  (%enum-project type enum-ordinal->enum ordinal enum-name))
+  (%enum-project type %enum-ordinal->enum-no-check ordinal enum-name))
 
 (define (enum-ordinal->value type ordinal)
   (assume (exact-natural? ordinal))
-  (%enum-project type enum-ordinal->enum ordinal enum-value))
+  (%enum-project type %enum-ordinal->enum-no-check ordinal enum-value))
 
 ;;;; Enum type accessors
 
@@ -469,7 +472,7 @@
        (lambda (i)
          (cond ((= i len) '())
                ((bitvector-ref/bool vec i)
-                (cons (proc (enum-ordinal->enum type i))
+                (cons (proc (%enum-ordinal->enum-no-check type i))
                       (build (+ i 1))))
                (else (build (+ i 1)))))))
       (build 0))))
@@ -489,7 +492,7 @@
     (let loop ((i (- (bitvector-length vec) 1)))
       (cond ((< i 0) eset)
             ((and (bitvector-ref/bool vec i)
-                  (not (pred (enum-ordinal->enum type i))))
+                  (not (pred (%enum-ordinal->enum-no-check type i))))
              (bitvector-set! vec i #f)
              (loop (- i 1)))
             (else (loop (- i 1)))))))
@@ -505,7 +508,7 @@
     (let loop ((i (- (bitvector-length vec) 1)))
       (cond ((< i 0) eset)
             ((and (bitvector-ref/bool vec i)
-                  (pred (enum-ordinal->enum type i)))
+                  (pred (%enum-ordinal->enum-no-check type i)))
              (bitvector-set! vec i #f)
              (loop (- i 1)))
             (else (loop (- i 1)))))))
@@ -523,7 +526,8 @@
       (let loop ((i 0) (state nil))
         (cond ((= i len) state)
               ((bitvector-ref/bool vec i)
-               (loop (+ i 1) (proc (enum-ordinal->enum type i) state)))
+               (loop (+ i 1)
+                     (proc (%enum-ordinal->enum-no-check type i) state)))
               (else (loop (+ i 1) state)))))))
 
 ;;;; Enum set logical operations
