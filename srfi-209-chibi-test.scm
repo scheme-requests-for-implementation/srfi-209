@@ -397,7 +397,7 @@
                              color-set)
           n))
 
-  (test color-names
+  (test (reverse color-names)
         (enum-set-fold (lambda (enum lis)
                          (cons (enum-name enum) lis))
                        '()
