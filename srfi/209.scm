@@ -564,7 +564,8 @@
 
 (define (enum-set-complement! eset)
   (assume (enum-set? eset))
-  (bitvector-not! (enum-set-bitvector eset)))
+  (bitvector-not! (enum-set-bitvector eset))
+  eset)
 
 ;;;; Syntax
 
