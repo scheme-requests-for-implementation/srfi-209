@@ -490,7 +490,8 @@
       (cond ((< i 0) eset)
             ((and (bitvector-ref/bool vec i)
                   (not (pred (enum-ordinal->enum type i))))
-             (bitvector-set! vec i #f))
+             (bitvector-set! vec i #f)
+             (loop (- i 1)))
             (else (loop (- i 1)))))))
 
 (define (enum-set-remove pred eset)
@@ -505,7 +506,8 @@
       (cond ((< i 0) eset)
             ((and (bitvector-ref/bool vec i)
                   (pred (enum-ordinal->enum type i)))
-             (bitvector-set! vec i #f))
+             (bitvector-set! vec i #f)
+             (loop (- i 1)))
             (else (loop (- i 1)))))))
 
 (define (enum-set-for-each proc eset)
