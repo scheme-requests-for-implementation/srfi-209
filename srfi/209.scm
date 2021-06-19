@@ -371,7 +371,7 @@
 (define (enum-set-subset? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (list<= eqv?
+  (lset<= eqv?
           (enum-set-map->list enum-name eset1)
           (enum-set-map->list enum-name eset2)))
 
