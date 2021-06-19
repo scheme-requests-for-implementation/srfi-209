@@ -452,14 +452,27 @@
 
 (define (enum-set->enum-list eset)
   (assume (enum-set? eset))
-  (enum-set-fold cons '() eset))
+  (enum-set-map->list values eset))
 
 (define (enum-set->list eset)
   (enum-set-map->list enum-name eset))
 
+;; Slightly complicated by the order in which proc is applied.
 (define (enum-set-map->list proc eset)
   (assume (procedure? proc))
-  (enum-set-fold (lambda (e res) (cons (proc e) res)) '() eset))
+  (assume (enum-set? eset))
+  (let* ((vec (enum-set-bitvector eset))
+         (len (bitvector-length vec))
+         (type (enum-set-type eset)))
+    (letrec
+     ((build
+       (lambda (i)
+         (cond ((= i len) '())
+               ((bitvector-ref/bool vec i)
+                (cons (proc (enum-ordinal->enum type i))
+                      (build (+ i 1))))
+               (else (build (+ i 1)))))))
+      (build 0))))
 
 (define (enum-set-count pred eset)
   (assume (procedure? pred))
