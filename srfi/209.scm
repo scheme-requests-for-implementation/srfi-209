@@ -365,19 +365,15 @@
   (bitvector-subset? (enum-set-bitvector eset2)
                      (enum-set-bitvector eset1)))
 
-(define (%enum-set->name-mapping eset)
-  (mapping-unfold null?
-                  (lambda (syms) (values (car syms) #t))
-                  cdr
-                  (enum-set-map->list enum-name eset)
-                  symbol-comparator))
-
+;; This uses lists as sets and is thus not very efficient.
+;; An implementation with SRFI 113 or some other set library
+;; might want to optimize this.
 (define (enum-set-subset? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
-  (mapping<=? symbol-comparator
-              (%enum-set->name-mapping eset1)
-              (%enum-set->name-mapping eset2)))
+  (list<= eqv?
+          (enum-set-map->list enum-name eset1)
+          (enum-set-map->list enum-name eset2)))
 
 (define (enum-set-any? pred eset)
   (assume (procedure? pred))
