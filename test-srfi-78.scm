@@ -13,7 +13,9 @@
       (define-syntax check
         (syntax-rules (=>)
           ((check expr => expected)
-           (if (equal? expr expected)
+           (check expr (=> equal?) expected))
+          ((check expr (=> equal) expected)
+           (if (equal expr expected)
              (begin
                (display 'expr)
                (display " => ")
@@ -63,3 +65,5 @@
       t ...))))
 
 (include "test-body.scm")
+
+(check-report)
