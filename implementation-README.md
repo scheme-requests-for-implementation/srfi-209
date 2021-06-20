@@ -33,6 +33,9 @@ counterparts are wrappers which copy their enum-set argument
 before mutating it.  Thus, in performance-critical applications,
 the side-effecting forms should be preferred.
 
+This implementation provides `enum-set-filter!` and
+`enum-set-remove!`, although they were not specified in the SRFI.
+
 # Implementation author
 
 Wolfgang Corcoran-Mathe
