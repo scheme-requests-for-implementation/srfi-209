@@ -319,6 +319,9 @@
   (assume (enum-set? eset))
   (zero? (bitvector-count #t (enum-set-bitvector eset))))
 
+(define (bit-nand a b)
+  (not (and (= 1 a) (= 1 b))))
+
 (define (enum-set-disjoint? eset1 eset2)
   (assume (enum-set? eset1))
   (assume (enum-set? eset2))
@@ -328,8 +331,8 @@
     (let ((len (bitvector-length vec1)))
       (let loop ((i 0))
         (or (= i len)
-            (and (= -1 (bitwise-nand (bitvector-ref/int vec1 i)
-                                     (bitvector-ref/int vec2 i)))
+            (and (bit-nand (bitvector-ref/int vec1 i)
+                           (bitvector-ref/int vec2 i))
                  (loop (+ i 1))))))))
 
 (define (enum-set=? eset1 eset2)
