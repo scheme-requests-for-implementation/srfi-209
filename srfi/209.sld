@@ -2,9 +2,9 @@
   (import (scheme base)
           (scheme case-lambda)
           (srfi 1)
+          (srfi 125)
           (srfi 128)
-          (srfi 151)
-          (srfi 146))
+          (srfi 178))
 
   (cond-expand
     ((library (srfi 145))
@@ -51,6 +51,7 @@
           enum-set-size enum-set->list enum-set-map->list enum-set-for-each
           enum-set-filter enum-set-remove enum-set-count enum-set-fold
           enum-set->enum-list
+          enum-set-filter! enum-set-remove!
 
           enum-set-union enum-set-intersection enum-set-difference
           enum-set-xor enum-set-complement enum-set-union!
