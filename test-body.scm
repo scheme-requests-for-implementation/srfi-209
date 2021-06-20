@@ -91,15 +91,15 @@
   (test-eqv 0 (enum-ordinal (enum-ordinal->enum color 0)))
   (test-eqv #t (eqv? color (enum-type (enum-ordinal->enum color 0))))
   (test-eqv #t (eqv? (enum-name->enum color 'red) (enum-ordinal->enum color 0)))
-  (test-eqv "deep-dish" (enum-value (enum-name->enum pizza 'chicago)))
+  (test-equal "deep-dish" (enum-value (enum-name->enum pizza 'chicago)))
 
   (test-eqv 0 (enum-name->ordinal color 'red))
   (test-eqv 6 (enum-name->ordinal color 'blue))
-  (test-eqv "mushrooms" (enum-name->value pizza 'funghi))
+  (test-equal "mushrooms" (enum-name->value pizza 'funghi))
   (test-eqv (enum-name->ordinal color 'blue) (enum-name->value color 'blue))
   (test-eqv 'red (enum-ordinal->name color 0))
   (test-eqv 'chicago (enum-ordinal->name pizza 3))
-  (test-eqv "mushrooms" (enum-ordinal->value pizza 1))
+  (test-equal "mushrooms" (enum-ordinal->value pizza 1))
   (test-eqv 6 (enum-ordinal->value color 6))
 )
 
