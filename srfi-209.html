@@ -25,7 +25,10 @@ Enums and Enum Sets</h1>
   <li>Draft #4 published: 2020-11-15</li>
   <li>Draft #5 published: 2020-12-08</li>
   <li>Finalized: 2020-12-17</li>
-</ul>
+  <li>Revised to fix errata:
+    <ul>
+      <li>2022-01-04 (Fix a contradiction in the definition of
+	<a href="#enum-set-constructor"><code>enum-set-constructor</code></a>.)</li></ul></li></ul>
 
 
 <h2>Abstract</h2>
@@ -358,7 +361,7 @@ The enum type can be retrieved with <code>enum-set-type</code>.
 </p>
 <p><small>Retrieves the enum type of <em>enum-set</em>, and returns a newly allocated
 enum set containing all the enums of the enum type.</small></p>
-<p>[R6RS] <small><code>(enum-set-constructor</code>&nbsp;<em>enum-set</em><code>)</code></small>
+<p id="enum-set-constructor">[R6RS] <small><code>(enum-set-constructor</code>&nbsp;<em>enum-set</em><code>)</code></small>
 </p>
 <p><small>Returns a procedure that accepts one argument, a list of symbols.
 This procedure returns a newly allocated enum set
