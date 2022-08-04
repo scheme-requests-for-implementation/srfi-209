@@ -247,7 +247,7 @@
   (let ((vec (make-bitvector (enum-type-size type) #f)))
     (for-each (lambda (e)
                 (assume (%well-typed-enum? type e) "ill-typed enum")
-                (bitvector-set! vec (enum-ordinal e) vec))
+                (bitvector-set! vec (enum-ordinal e) #t))
               enums)
     (make-enum-set type vec)))
 
@@ -284,7 +284,9 @@
   (let ((type (enum-set-type eset)))
     (lambda (names)
       (list->enum-set type
-                      (map (lambda (sym) (enum-name->enum type sym))
+                      (map (lambda (sym)
+                             (or (enum-name->enum type sym)
+                                 (error "invalid enum name" sym)))
                            names)))))
 
 ;; [Deprecated] Returns a procedure which takes a symbol and returns

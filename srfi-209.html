@@ -25,7 +25,17 @@ Enums and Enum Sets</h1>
   <li>Draft #4 published: 2020-11-15</li>
   <li>Draft #5 published: 2020-12-08</li>
   <li>Finalized: 2020-12-17</li>
-</ul>
+  <li>Revised to fix errata:
+    <ul>
+      <li>2022-01-04 (Fix a contradiction in the definition of
+	<a href="#enum-set-constructor"><code>enum-set-constructor</code></a>.)</li>
+      <li>2022-07-01 (Fix: The first argument of
+	<a href="#enum-name-to-ordinal"><code>enum-name->ordinal</code></a>,
+	<code>enum-name->value</code>, <code>enum-ordinal->name</code>
+	and <code>enum-ordinal->value</code> must be
+	<code>enum-type</code>, not <code>enum-set</code>; and the
+	entry for <a href="#enum-set-intersection"><code>enum-set-intersection</code></a>
+	(functional API) was missing.)</li></ul></li></ul>
 
 
 <h2>Abstract</h2>
@@ -204,27 +214,27 @@ exact-integer</em><code>)</code></p>
 unique.</p>
 <p>The following convenience procedures provide enum-finding followed by access
 to a property.</p>
-<p><code>(enum-name-&gt;ordinal</code>&nbsp;<em>enum-set
+<p><code id="enum-name-to-ordinal">(enum-name-&gt;ordinal</code>&nbsp;<em>enum-type
 symbol</em><code>)</code></p>
 <p>Returns the ordinal of the enum belonging to <em>enum-type</em> whose name is
 <em>symbol</em>. It is an error if there is no such enum.</p>
 <pre class="example"><code>(enum-name-&gt;ordinal color 'blue) &rArr; 5
 </code></pre>
-<p><code>(enum-name-&gt;value</code>&nbsp;<em>enum-set
+<p><code>(enum-name-&gt;value</code>&nbsp;<em>enum-type
 symbol</em><code>)</code></p>
 <p>Returns the value of the enum belonging to <em>enum-type</em> whose name is
 <em>symbol</em>. It is an error if there is no such enum.</p>
 <pre class="example"><code>(enum-name-&gt;value pizza 'funghi) &rArr; "mushrooms"
 (enum-name-&gt;value color 'blue) &rArr; 5
 </code></pre>
-<p><code>(enum-ordinal-&gt;name</code>&nbsp;<em>enum-set
+<p><code>(enum-ordinal-&gt;name</code>&nbsp;<em>enum-type
 exact-integer</em><code>)</code></p>
 <p>Returns the name of the enum belonging to <em>enum-type</em> whose ordinal is
 <em>exact-integer</em>. It is an error if there is no such enum.</p>
 <pre class="example"><code>(enum-ordinal-&gt;name color 0) &rArr; red
 (enum-ordinal-&gt;name pizza 3) &rArr; hawaiian
 </code></pre>
-<p><code>(enum-ordinal-&gt;value</code>&nbsp;<em>enum-set
+<p><code>(enum-ordinal-&gt;value</code>&nbsp;<em>enum-type
 exact-integer</em><code>)</code></p>
 <p>Returns the value of the enum belonging to <em>enum-type</em> whose ordinal
 is <em>exact-integer</em>. It is an error if there is no such enum.</p>
@@ -358,15 +368,14 @@ The enum type can be retrieved with <code>enum-set-type</code>.
 </p>
 <p><small>Retrieves the enum type of <em>enum-set</em>, and returns a newly allocated
 enum set containing all the enums of the enum type.</small></p>
-<p>[R6RS] <small><code>(enum-set-constructor</code>&nbsp;<em>enum-set</em><code>)</code></small>
+<p id="enum-set-constructor">[R6RS] <small><code>(enum-set-constructor</code>&nbsp;<em>enum-set</em><code>)</code></small>
 </p>
 <p><small>Returns a procedure that accepts one argument, a list of symbols.
 This procedure returns a newly allocated enum set
 containing the enums whose names are
 members of the list of symbols.
 It is an error if any of the symbols is not the name of an enum in the
-enum type associated with <em>enum-set</em>.
-Otherwise, <code>#f</code> is returned.</small></p>
+enum type associated with <em>enum-set</em>.</small></p>
 <h3 id="enum-set-predicates">Enum set predicates</h3>
 <p><code>(enum-set?</code>&nbsp;<em>obj</em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>obj</em> is an enum-set and <code>#f</code>
@@ -594,8 +603,10 @@ of the result do not belong to the same enum type.</p>
 
 (enum-set=? color-set (enum-set-union! reddish ~reddish)) &rArr; #t
 </code></pre>
-<code>(enum-set-intersection!</code>&nbsp;<em>enum-set-1
+<p><code id="enum-set-intersection">(enum-set-intersection</code>&nbsp;<em>enum-set-1
 enum-set-2</em><code>)</code><br/>
+<code>(enum-set-intersection!</code>&nbsp;<em>enum-set-1
+enum-set-2</em><code>)</code></p>
 <p>Returns an enum set containing all the elements that appear in both
 <em>enum-set-1</em> and <em>enum-set-2</em>. It is an error if all the elements
 of the result do not belong to the same enum type.</p>
