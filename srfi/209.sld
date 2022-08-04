@@ -6,12 +6,15 @@
           (srfi 128)
           (srfi 178))
 
-  (cond-expand
-    ((library (srfi 145))
-     (import (srfi 145)))
-    (else
-     (begin
-      (define (assume _) #t))))
+  ;; Comment out under R6RS.
+  (define-syntax assert
+    (syntax-rules ()
+      ((assert expr)
+       (unless expr
+         (error "assertion failed" 'expr)))
+      ((assert expr msg)
+       (unless expr
+         (error msg 'expr)))))
 
   (cond-expand
     ((library (srfi 162))
