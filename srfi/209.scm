@@ -22,6 +22,15 @@
 
 ;;;; Utility
 
+(define-syntax assert
+  (syntax-rules ()
+    ((assert expr)
+     (unless expr
+       (error "assertion failed" 'expr)))
+    ((assert expr msg)
+     (unless expr
+       (error msg 'expr)))))
+
 (define (exact-natural? obj)
   (and (exact-integer? obj) (not (negative? obj))))
 

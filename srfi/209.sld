@@ -6,15 +6,6 @@
           (srfi 128)
           (srfi 178))
 
-  (define-syntax assert
-    (syntax-rules ()
-      ((assert expr)
-       (unless expr
-         (error "assertion failed" 'expr)))
-      ((assert expr msg)
-       (unless expr
-         (error msg 'expr)))))
-
   (cond-expand
     ((library (srfi 162))
      (import (srfi 162)))
