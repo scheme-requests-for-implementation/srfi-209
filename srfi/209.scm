@@ -60,7 +60,8 @@
   (value enum-value))
 
 (define (make-enum-type names+vals)
-  (assert (or (pair? names+vals) (null? names+vals)))
+  (assert (or (pair? names+vals) (null? names+vals))
+          "argument must be a proper list")
   (let* ((type (make-raw-enum-type #f #f #f))
          (enums (generate-enums type names+vals)))
     (set-enum-type-enum-vector! type (list->vector enums))
@@ -125,7 +126,7 @@
   (assert (enum? (car enums)))
   (let ((type (enum-type (car enums))))
     (assert (every (lambda (e) (%well-typed-enum? type e)) (cdr enums))
-            "invalid arguments")
+            "enums must all belong to the same type")
     (apply compare (enum-type-comparator type) enums)))
 
 (define (enum=? enum1 enum2 . enums)
@@ -133,11 +134,12 @@
   (let* ((type (enum-type enum1))
          (comp (enum-type-comparator type)))
     (cond ((null? enums)                            ; fast path
-           (assert (%well-typed-enum? type enum2) "enum=?: invalid argument")
+           (assert (%well-typed-enum? type enum2)
+                   "enums must all belong to the same type")
            ((comparator-equality-predicate comp) enum1 enum2))
           (else                                     ; variadic path
            (assert (every (lambda (e) (%well-typed-enum? type e)) enums)
-                   "enum=?: invalid arguments")
+                   "enums must all belong to the same type")
            (apply =? comp enum1 enum2 enums)))))
 
 (define (enum<? . enums) (%compare-enums <? enums))
@@ -252,7 +254,8 @@
 (define (enum-set type . enums) (list->enum-set type enums))
 
 (define (list->enum-set type enums)
-  (assert (or (pair? enums) (null? enums)))
+  (assert (or (pair? enums) (null? enums))
+          "argument must be a proper list")
   (let ((vec (make-bitvector (enum-type-size type) #f)))
     (for-each (lambda (e)
                 (assert (%well-typed-enum? type e) "ill-typed enum")
@@ -263,7 +266,8 @@
 ;; Returns a set of enums drawn from the enum-type/-set src with
 ;; the same names as the enums of eset.
 (define (enum-set-projection src eset)
-  (assert (or (enum-type? src) (enum-set? src)))
+  (assert (or (enum-type? src) (enum-set? src))
+          "argument must be an enum type or enum set")
   (assert (enum-set? eset))
   (let ((type (if (enum-type? src) src (enum-set-type src))))
     (list->enum-set
@@ -316,7 +320,7 @@
 (define (enum-set-contains? eset enum)
   (assert (enum-set? eset))
   (assert (%well-typed-enum? (enum-set-type eset) enum)
-          "enum-set-contains?: invalid argument")
+          "enum types of arguments must match")
   (bitvector-ref/bool (enum-set-bitvector eset) (enum-ordinal enum)))
 
 ;; FIXME: Avoid double (type, then set) lookup.
@@ -339,7 +343,8 @@
 (define (enum-set-disjoint? eset1 eset2)
   (assert (enum-set? eset1))
   (assert (enum-set? eset2))
-  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2))
+          "arguments must have the same enum type")
   (let ((vec1 (enum-set-bitvector eset1))
         (vec2 (enum-set-bitvector eset2)))
     (let ((len (bitvector-length vec1)))
@@ -350,13 +355,15 @@
                  (loop (+ i 1))))))))
 
 (define (enum-set=? eset1 eset2)
-  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2))
+          "arguments must have the same enum type")
   (bitvector=? (enum-set-bitvector eset1) (enum-set-bitvector eset2)))
 
 (define (enum-set<? eset1 eset2)
   (assert (enum-set? eset1))
   (assert (enum-set? eset2))
-  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2))
+          "arguments must have the same enum type")
   (let ((vec1 (enum-set-bitvector eset1))
         (vec2 (enum-set-bitvector eset2)))
     (and (bitvector-subset? vec1 vec2)
@@ -365,7 +372,8 @@
 (define (enum-set>? eset1 eset2)
   (assert (enum-set? eset1))
   (assert (enum-set? eset2))
-  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2))
+          "arguments must have the same enum type")
   (let ((vec1 (enum-set-bitvector eset1))
         (vec2 (enum-set-bitvector eset2)))
     (and (bitvector-subset? vec2 vec1)
@@ -374,14 +382,16 @@
 (define (enum-set<=? eset1 eset2)
   (assert (enum-set? eset1))
   (assert (enum-set? eset2))
-  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2))
+          "arguments must have the same enum type")
   (bitvector-subset? (enum-set-bitvector eset1)
                      (enum-set-bitvector eset2)))
 
 (define (enum-set>=? eset1 eset2)
   (assert (enum-set? eset1))
   (assert (enum-set? eset2))
-  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2)))
+  (assert (%enum-type=? (enum-set-type eset1) (enum-set-type eset2))
+          "arguments must have the same enum type")
   (bitvector-subset? (enum-set-bitvector eset2)
                      (enum-set-bitvector eset1)))
 
@@ -420,7 +430,8 @@
   (case-lambda
     ((eset enum)                 ; fast path
      (assert (enum-set? eset))
-     (assert (%well-typed-enum? (enum-set-type eset) enum))
+     (assert (%well-typed-enum? (enum-set-type eset) enum)
+             "arguments must have the same enum type")
      (bitvector-set! (enum-set-bitvector eset) (enum-ordinal enum) #t)
      eset)
     ((eset . enums)              ; variadic path
@@ -429,7 +440,7 @@
            (vec (enum-set-bitvector eset)))
        (for-each (lambda (e)
                    (assert (%well-typed-enum? type e)
-                           "enum-set-adjoin!: ill-typed enum")
+                           "arguments must have the same enum type")
                    (bitvector-set! vec (enum-ordinal e) #t))
                  enums)
        eset))))
@@ -442,7 +453,7 @@
     ((eset enum)                ; fast path
      (assert (enum-set? eset))
      (assert (%well-typed-enum? (enum-set-type eset) enum)
-             "enum-set-delete!: ill-typed enum")
+             "arguments must have the same enum type")
      (bitvector-set! (enum-set-bitvector eset) (enum-ordinal enum) #f)
      eset)
     ((eset . enums)             ; variadic path
@@ -453,13 +464,14 @@
 
 (define (enum-set-delete-all! eset enums)
   (assert (enum-set? eset))
-  (assert (or (pair? enums) (null? enums)))
+  (assert (or (pair? enums) (null? enums))
+          "argument must be a proper list")
   (unless (null? enums)
     (let ((type (enum-set-type eset))
           (vec (enum-set-bitvector eset)))
        (for-each (lambda (e)
                    (assert (%well-typed-enum? type e)
-                           "enum-set-delete-all!: ill-typed enum")
+                           "arguments must have the same enum type")
                    (bitvector-set! vec (enum-ordinal e) #f))
                  enums)))
   eset)
@@ -552,7 +564,8 @@
 (define (%enum-set-logical-op! bv-proc eset1 eset2)
   (assert (enum-set? eset1))
   (assert (enum-set? eset2))
-  (assert (%enum-set-type=? eset1 eset2) "enum sets have different types")
+  (assert (%enum-set-type=? eset1 eset2)
+          "arguments must have the same enum type")
   (bv-proc (enum-set-bitvector eset1) (enum-set-bitvector eset2))
   eset1)
 
