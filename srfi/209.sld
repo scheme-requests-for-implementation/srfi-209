@@ -6,7 +6,6 @@
           (srfi 128)
           (srfi 178))
 
-  ;; Comment out under R6RS.
   (define-syntax assert
     (syntax-rules ()
       ((assert expr)
