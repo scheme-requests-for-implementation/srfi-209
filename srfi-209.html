@@ -406,7 +406,9 @@ and <code>#f</code> otherwise.</p>
 </code></pre>
 <p><code>(enum-set-disjoint?</code>&nbsp;<em>enum-set<sub>1</sub> enum-set<sub>2</sub></em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum-set<sub>1</sub></em> and <em>enum-set<sub>2</sub></em>
-do not have any enum objects in common, and <code>#f</code> otherwise.</p>
+do not have any enum objects in common, and <code>#f</code> otherwise.
+It is an error if the members of the enum sets do not belong
+to the same type.</p>
 <pre class="example"><code>(define reddish
   (list-&gt;enum-set (map (lambda (name)
                          (enum-name-&gt;enum color name))
