@@ -350,7 +350,7 @@ Returns an enum set containing the enums belonging to the enum type
 that have the same names as the members of <em>enum-set</em>, whose enum type
 need not be not the same as the enum-type. It is an error if <em>enum-set</em>
 contains an enum that does not correspond by name to an enum in
-<em>enum-type-or-set</em>.</p>
+the enum type of <em>enum-type-or-set</em>.</p>
 <pre class="example"><code>(enum-set-projection us-traffic-light
             (enum-set color color-red color-green color-blue))
  = (enum-set us-traffic-light
