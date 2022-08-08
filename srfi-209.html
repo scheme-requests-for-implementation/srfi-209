@@ -35,8 +35,13 @@ Enums and Enum Sets</h1>
 	and <code>enum-ordinal->value</code> must be
 	<code>enum-type</code>, not <code>enum-set</code>; and the
 	entry for <a href="#enum-set-intersection"><code>enum-set-intersection</code></a>
-	(functional API) was missing.)</li></ul></li></ul>
-
+	(functional API) was missing.)</li>
+      <li>2022-08-08 (Fix: <code><a href="#enum-set-constructors">enum-empty-set</a></code>
+	was missing, it wasn't specified was <code><a href="#enum-set-disjoint?">enum-set-disjoint?</a></code>
+	does if the sets don't belong to the same type, and it wasn't
+	specified what <code><a href="#enum-set-projection">enum-set-projection</a></code>
+	does when the enum-type of the first argument does not contain
+	an enum with a name in the second argument.)</ul></li></ul>
 
 <h2>Abstract</h2>
 
@@ -342,7 +347,7 @@ unless all the members are enums belonging to <em>enum-type</em>.</p>
                     pizza-funghi)
  &rArr; #t
 </code></pre>
-<p><code>(enum-set-projection</code>&nbsp;<em>enum-type-or-set
+<p id="enum-set-projection"><code>(enum-set-projection</code>&nbsp;<em>enum-type-or-set
 enum-set</em><code>)</code></p>
 <p>If <em>enum-type-or-set</em> is an enum set, its enum type is extracted
 and used; otherwise, the enum type is used directly.
@@ -406,7 +411,7 @@ and <code>#f</code> otherwise.</p>
 (enum-set-empty? (enum-set-delete-all! color-set (enum-set-&gt;enum-list color-set)))
  &rArr; #t
 </code></pre>
-<p><code>(enum-set-disjoint?</code>&nbsp;<em>enum-set<sub>1</sub> enum-set<sub>2</sub></em><code>)</code></p>
+<p id="enum-set-disjoint?"><code>(enum-set-disjoint?</code>&nbsp;<em>enum-set<sub>1</sub> enum-set<sub>2</sub></em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum-set<sub>1</sub></em> and <em>enum-set<sub>2</sub></em>
 do not have any enum objects in common, and <code>#f</code> otherwise.
 It is an error if the members of the enum sets do not belong
