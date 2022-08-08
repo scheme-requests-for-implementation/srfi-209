@@ -303,6 +303,9 @@ hash function, and orders enums based on their ordinal values.</p>
 (&lt;? pizza-comparator pizza-margherita pizza-chicago) &rArr; #t
 </code></pre>
 <h3 id="enum-set-constructors">Enum set constructors</h3>
+<p><code>(enum-empty-set</code>&nbsp;<em>enum-type</em><code>)</code></p>
+<p>Returns an empty enum set that can contain enums of the type
+<em>enum-type</em>.</p>
 <p><code>(enum-type-&gt;enum-set</code>&nbsp;<em>enum-type</em><code>)</code></p
 >
 <p>Returns an enum set containing all the enums that belong to
@@ -345,7 +348,9 @@ enum-set</em><code>)</code></p>
 and used; otherwise, the enum type is used directly.
 Returns an enum set containing the enums belonging to the enum type
 that have the same names as the members of <em>enum-set</em>, whose enum type
-need not be not the same as the enum-type.</p>
+need not be not the same as the enum-type. It is an error if <em>enum-set</em>
+contains an enum that does not correspond by name to an enum in
+the enum type of <em>enum-type-or-set</em>.</p>
 <pre class="example"><code>(enum-set-projection us-traffic-light
             (enum-set color color-red color-green color-blue))
  = (enum-set us-traffic-light
@@ -403,7 +408,9 @@ and <code>#f</code> otherwise.</p>
 </code></pre>
 <p><code>(enum-set-disjoint?</code>&nbsp;<em>enum-set<sub>1</sub> enum-set<sub>2</sub></em><code>)</code></p>
 <p>Returns <code>#t</code> if <em>enum-set<sub>1</sub></em> and <em>enum-set<sub>2</sub></em>
-do not have any enum objects in common, and <code>#f</code> otherwise.</p>
+do not have any enum objects in common, and <code>#f</code> otherwise.
+It is an error if the members of the enum sets do not belong
+to the same type.</p>
 <pre class="example"><code>(define reddish
   (list-&gt;enum-set (map (lambda (name)
                          (enum-name-&gt;enum color name))
@@ -476,7 +483,8 @@ and <code>#f</code> otherwise.</p>
 </p>
 <p><small>Returns a procedure that accepts one argument, a symbol.
 When this procedure is called, if the symbol is the name of an enum
-in <em>enum-set</em>, then the ordinal of that enum is returned.
+in the enum type associated with <em>enum-set</em>,
+then the ordinal of that enum is returned.
 Otherwise, <code>#f</code> is returned.</small></p>
 <h3 id="enum-set-mutators">Enum set mutators</h3>
 <p>These procedures come in pairs.

@@ -7,13 +7,6 @@
           (srfi 178))
 
   (cond-expand
-    ((library (srfi 145))
-     (import (srfi 145)))
-    (else
-     (begin
-      (define (assume _) #t))))
-
-  (cond-expand
     ((library (srfi 162))
      (import (srfi 162)))
     (else
