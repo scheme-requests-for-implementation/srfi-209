@@ -24,7 +24,7 @@
        (and (identifier? #'type-name)
             (identifier? #'constructor))
        (with-syntax (((name ...) (map parse-name-val #'(name-val ...)))
-                     ((i ...) (iota (length #'(name-val ...)))))
+                     ((idx ...) (iota (length #'(name-val ...)))))
          (unless (unique-ids? #'(name ...))
            (syntax-violation 'define-enum
              "duplicated enum names" stx #'(name ...)))
@@ -35,9 +35,13 @@
            (define-syntax type-name
              (syntax-rules (name ...)
                ((_ name)
-                (%enum-ordinal->enum-no-assert new-type i)) ...
+                (%enum-ordinal->enum-no-assert new-type idx)) ...
                ((_ (x . _))
                 (syntax-violation 'type-name "invalid syntax" x))
                ((_ id)
                 (syntax-violation 'type-name "invalid enum name" id))))
-          )))))))
+
+           (define-syntax constructor
+             (syntax-rules ()
+               ((_ arg ...)
+                (enum-set new-type (type-name arg) ...)))))))))))
