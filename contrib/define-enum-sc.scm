@@ -42,7 +42,7 @@
                 (syntax-violation 'type-name "invalid enum name" id))))
 
            (...  ; escape ellipsis for the following
-           (define-syntax constructor
-             (syntax-rules ()
-               ((_ arg ...)
-                (enum-set new-type (type-name arg) ...))))))))))))
+            (define-syntax constructor
+              (syntax-rules ()
+                ((_ arg ...)
+                 (enum-set new-type (type-name arg) ...))))))))))))
