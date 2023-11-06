@@ -32,17 +32,33 @@
           (begin
            (define new-type (make-enum-type '(name-val ...)))
 
-           (define-syntax type-name
+           ;; Helper
+           (define-syntax enum-name-to-ordinal-syn
              (syntax-rules (name ...)
-               ((_ name)
-                (%enum-ordinal->enum-no-assert new-type idx)) ...
+               ((_ loc name) idx) ...
+               ((_ loc x)
+                (syntax-violation 'loc "invalid enum name" x))))
+
+           (define-syntax type-name
+             (syntax-rules ()
                ((_ (x . _))
-                (syntax-violation 'type-name "invalid syntax" x))
+                (syntax-violation 'type-name "invalid syntax" (x . _)))
                ((_ id)
-                (syntax-violation 'type-name "invalid enum name" id))))
+                (%enum-ordinal->enum-no-assert
+                 new-type
+                 (enum-name-to-ordinal-syn type-name id)))))
 
            (...  ; escape ellipsis for the following
             (define-syntax constructor
-              (syntax-rules ()
-                ((_ arg ...)
-                 (enum-set new-type (type-name arg) ...))))))))))))
+              (lambda (stx)
+                (syntax-case stx ()
+                  ((_ arg ...)
+                   (every identifier? #'(arg ...))
+                   (let ((vec (make-bitvector (enum-type-size new-type)
+                                              #f)))
+                     ;; Unroll for-each loop
+                     (bitvector-set!
+                      vec
+                      (enum-name-to-ordinal-syn constructor arg)
+                      #t) ...
+                     (make-enum-set new-type vec))))))))))))))
