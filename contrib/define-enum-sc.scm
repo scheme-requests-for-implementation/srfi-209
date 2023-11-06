@@ -27,7 +27,7 @@
                      ((idx ...) (iota (length #'(name-val ...)))))
          (unless (unique-ids? #'(name ...))
            (syntax-violation 'define-enum
-             "duplicated enum names" stx #'(name ...)))
+             "duplicated enum names" stx #'(quote (name ...))))
          (syntax
           (begin
            (define new-type (make-enum-type '(name-val ...)))
@@ -37,12 +37,12 @@
              (syntax-rules (name ...)
                ((_ loc name) idx) ...
                ((_ loc x)
-                (syntax-violation 'loc "invalid enum name" x))))
+                (syntax-violation 'loc "invalid enum name" 'x))))
 
            (define-syntax type-name
              (syntax-rules ()
                ((_ (x . _))
-                (syntax-violation 'type-name "invalid syntax" (x . _)))
+                (syntax-violation 'type-name "invalid syntax" 'x))
                ((_ id)
                 (%enum-ordinal->enum-no-assert
                  new-type
