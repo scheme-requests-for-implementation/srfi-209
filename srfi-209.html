@@ -87,6 +87,7 @@ The nearest equivalent to an enum object in the sense of this SRFI
 is a singleton enum set.
 To perform an efficient test of enum set membership, it is necessary to use such a
 singleton, and comparing two such sets for equality involves = rather than <code>eqv?</code>.
+</p>
 <p>In C, enums have names and numeric
 values, by default consecutive values, but often powers of two or something
 externally dictated. However, the name is not accessible at runtime, and
@@ -636,6 +637,7 @@ belong to the same enum type.
 <pre class="example"><code>(enum-set=? ~reddish (enum-set-difference! color-set reddish))
  &rArr; #t
 </code></pre>
+</p>
 <p><code>(enum-set-xor</code>&nbsp;<em>enum-set-1
 enum-set-2</em><code>)</code><br/>
 <code>(enum-set-xor!</code>&nbsp;<em>enum-set-1
@@ -668,7 +670,7 @@ of an enum.</p>
 When &lt;type-name&gt; is invoked as <code>(</code>&lt;type-name&gt; &lt;symbol&gt;<code>)</code>,
 it returns the enum named &lt;symbol&gt; in the case of <code>define-enum</code>
 or the symbol itself in the case of <code>define-enumeration</code>.
-If the symbol does not name any enum of the enum-type, an error is signaled.
+If the symbol does not name any enum of the enum-type, an error is signaled.</p>
 <p>
 &lt;Constructor-syntax&gt; is an identifier that is bound to a
 macro that, given any finite sequence of the names of enums,
