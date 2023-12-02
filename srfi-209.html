@@ -86,7 +86,8 @@ a quasi-curried procedure for performing these operations on a specified enum-ty
 The nearest equivalent to an enum object in the sense of this SRFI
 is a singleton enum set.
 To perform an efficient test of enum set membership, it is necessary to use such a
-singleton, and comparing two such sets for equality involves = rather than <code>eqv?</code>.
+singleton, and comparing two such sets for equality involves <code>=</code> rather
+than <code>eqv?</code>.
 </p>
 <p>In C, enums have names and numeric
 values, by default consecutive values, but often powers of two or something
