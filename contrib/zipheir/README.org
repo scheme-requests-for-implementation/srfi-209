@@ -1,0 +1,14 @@
+This directory contains an additional implementation of SRFI 209
+provided by Wolfgang.  Here is the description he included:
+
+#+begin_quote
+Almost three years ago, [[https://srfi-email.schemers.org/srfi-209/msg/15550027/][Marc asked]] for a version of ~define-enum~ that
+does most of its work at expansion time.  I've finally gotten around
+to it.
+
+Unfortunately, I haven't been able to test it directly, since I
+haven't found an implementation with ~syntax-case~ and a SRFI 209 port
+(with all its dependencies).  I'm working on it and will correct at a
+later date anything that's broken.  Patches are welcome, if anyone
+cares to look it over.
+#+end_quote
