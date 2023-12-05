@@ -54,11 +54,12 @@
                 (syntax-case stx ()
                   ((_ arg ...)
                    (every identifier? #'(arg ...))
-                   (let ((vec (make-bitvector (enum-type-size new-type)
-                                              #f)))
-                     ;; Unroll for-each loop
-                     (bitvector-set!
-                      vec
-                      (enum-name-to-ordinal-syn constructor arg)
-                      #t) ...
-                     (make-enum-set new-type vec))))))))))))))
+                   (syntax
+                    (let ((vec (make-bitvector (enum-type-size new-type)
+                                               #f)))
+                      ;; Unroll for-each loop
+                      (bitvector-set!
+                       vec
+                       (enum-name-to-ordinal-syn constructor arg)
+                       #t) ...
+                      (make-enum-set new-type vec)))))))))))))))
