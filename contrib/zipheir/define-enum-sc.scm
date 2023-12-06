@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2023 Wolfgang Corcoran-Mathe <wcm@sigwinch.xyz>
+;;;
+;;; SPDX-License-Identifier: MIT
+
 (import (rnrs)
         (rnrs syntax-case (6))
         (only (srfi :1) find iota))

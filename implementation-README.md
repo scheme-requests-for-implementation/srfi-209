@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2020 Wolfgang Corcoran-Mathe <wcm@sigwinch.xyz>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Enums
 
 This is an implementation of [SRFI 209](https://srfi.schemers.org/srfi-209),

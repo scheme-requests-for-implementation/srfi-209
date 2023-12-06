@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Wolfgang Corcoran-Mathe <wcm@sigwinch.xyz>
+#
+# SPDX-License-Identifier: MIT
+
 This directory contains an additional implementation of SRFI 209
 provided by Wolfgang.  Here is the description he included:
 
