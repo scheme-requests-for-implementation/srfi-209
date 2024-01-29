@@ -1,5 +1,5 @@
 
-# SPDX-FileCopyrightText: 2024 John Cowan (text) and Wolfgang Corcoran-Mathe (implementation)
+# SPDX-FileCopyrightText: 2024 Arthur A. Gleckler
 # SPDX-License-Identifier: MIT
 * SRFI 209: Enums and Enum Sets
 
