@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2020 Arthur A. Gleckler <srfi@speechcode.com>
+#
+# SPDX-License-Identifier: MIT
+
 * SRFI 209: Enums and Enum Sets
 
 ** by John Cowan (text) and Wolfgang Corcoran-Mathe (implementation)

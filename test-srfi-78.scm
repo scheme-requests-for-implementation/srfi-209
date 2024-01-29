@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2020 Wolfgang Corcoran-Mathe <wcm@sigwinch.xyz>
+;;;
+;;; SPDX-License-Identifier: MIT
+
 (import (scheme base)
         (scheme write)
         (srfi 1)

@@ -1,3 +1,7 @@
+;;; SPDX-FileCopyrightText: 2020 Wolfgang Corcoran-Mathe <wcm@sigwinch.xyz>
+;;;
+;;; SPDX-License-Identifier: MIT
+
 (module
   (srfi 205)
   (enum-type? enum? enum-type-contains? enum=? enum<? enum>?
